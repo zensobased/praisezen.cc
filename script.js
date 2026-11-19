@@ -37,6 +37,7 @@
   const discordPill = document.getElementById("discord");
   const discordLabel = document.getElementById("discordLabel");
   const avatarImg = document.getElementById("avatar");
+  const decorationImg = document.getElementById("avatarDecoration");
   const favicon = document.getElementById("favicon");
 
   const adminEl = document.getElementById("admin");
@@ -380,7 +381,45 @@
 
   let liveAvatar = "";
 
+  function decorationUrl(user) {
+    const asset = user && user.avatar_decoration_data && user.avatar_decoration_data.asset;
+    return asset
+      ? `https://cdn.discordapp.com/avatar-decoration-presets/${asset}.png?size=240&passthrough=true`
+      : "";
+  }
+
+  let liveDecoration = "";
+
+  function applyDecoration(user) {
+    if (!decorationImg) return;
+
+    const url = decorationUrl(user);
+    if (!url) {
+      if (liveDecoration) {
+        liveDecoration = "";
+        decorationImg.hidden = true;
+        decorationImg.removeAttribute("src");
+      }
+      return;
+    }
+    if (url === liveDecoration) return;
+
+    // same trick as the avatar: only show it once the preset really loads
+    const probe = new Image();
+    probe.onload = () => {
+      liveDecoration = url;
+      decorationImg.src = url;
+      decorationImg.hidden = false;
+    };
+    probe.src = url;
+  }
+
   function applyAvatar(user) {
+    applyDecoration(user);
+
+    // no custom Discord avatar? keep the pfp that ships with the repo
+    if (!user || !user.avatar) return;
+
     const url = discordAvatar(user, 512);
     if (!url || url === liveAvatar || !avatarImg) return;
 

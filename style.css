@@ -319,8 +319,13 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.card.is-tilting .avatar {
+.card.is-tilting .avatar,
+.card.is-tilting .avatar-decoration {
   transform: translateZ(58px);
+}
+
+.avatar-decoration {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .card.is-tilting .info {
@@ -328,8 +333,27 @@ body {
 }
 
 .avatar-wrap {
+  position: relative;
   width: 172px;
   height: 172px;
+}
+
+/* Discord avatar decoration: same 288px preset the client draws, layered
+   straight over the pfp so it frames/overflows the circle identically. */
+.avatar-decoration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  z-index: 2;
+}
+
+.avatar-decoration[hidden] {
+  display: none;
 }
 
 .avatar {
