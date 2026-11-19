@@ -8,7 +8,7 @@
     handle: "@rebornzen",
     bio: "yooo wsp",
     location: "Tokyo, Japan",
-    views: 1042,
+    views: 0,
     lastfm: "",
     song: "assets/raininglol.mp3",
     songKey: "",
@@ -67,14 +67,12 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatViews = (n) => new Intl.NumberFormat("en-US").format(n);
 
-  // Profile view count shown on the site. Edit this number to set your views.
-  // A ?views=N link overrides it for that visit only.
-  const VIEWS_PINNED = 1337;
+  // Views come from the API. ?views=N overrides the count for that visit only.
   const viewsParam = new URLSearchParams(window.location.search).get("views");
   const VIEWS_OVERRIDE =
     viewsParam !== null && String(viewsParam).trim() !== "" && Number.isFinite(Number(viewsParam))
       ? Math.max(0, Math.floor(Number(viewsParam)))
-      : Math.max(0, Math.floor(VIEWS_PINNED));
+      : null;
 
   const state = { ...DEFAULTS };
 
