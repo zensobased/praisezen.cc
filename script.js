@@ -246,7 +246,11 @@
 
     function typeNext() {
       if (i >= full.length) {
-        window.setTimeout(() => nameEl.classList.remove("is-typing"), 1500);
+        window.setTimeout(() => {
+          nameEl.classList.remove("is-typing");
+          // drop the reserved width so the name sits centred again
+          nameEl.style.minWidth = "";
+        }, 1500);
         return;
       }
       i += 1;

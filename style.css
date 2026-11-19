@@ -387,10 +387,12 @@ body {
   line-height: 0.98;
   letter-spacing: 0;
   color: var(--fg);
-  text-shadow: 0 0 16.5px currentColor;
+  /* 0.46em = the old 16.5px at 36px, but it scales down with the mobile
+     font-size instead of turning into a clipped rectangle */
+  text-shadow: 0 0 0.46em currentColor;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* overflow: hidden used to clip the glow and the typing caret */
+  overflow: visible;
 }
 
 .name.is-typing::after {
@@ -815,6 +817,8 @@ body.is-ready .reveal {
 
   .name {
     font-size: clamp(28px, 9vw, 32px);
+    text-shadow: 0 0 0.4em currentColor;
+    max-width: 100%;
   }
 
   .handle {
@@ -897,6 +901,7 @@ body.is-ready .reveal {
 
   .name {
     font-size: 26px;
+    text-shadow: 0 0 0.36em currentColor;
   }
 
   .handle {
