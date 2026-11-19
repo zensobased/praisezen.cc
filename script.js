@@ -67,12 +67,14 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatViews = (n) => new Intl.NumberFormat("en-US").format(n);
 
-  // ?views=N pins the displayed view count locally and skips the API bump
+  // Profile view count shown on the site. Edit this number to set your views.
+  // A ?views=N link overrides it for that visit only.
+  const VIEWS_PINNED = 1337;
   const viewsParam = new URLSearchParams(window.location.search).get("views");
   const VIEWS_OVERRIDE =
     viewsParam !== null && String(viewsParam).trim() !== "" && Number.isFinite(Number(viewsParam))
       ? Math.max(0, Math.floor(Number(viewsParam)))
-      : null;
+      : Math.max(0, Math.floor(VIEWS_PINNED));
 
   const state = { ...DEFAULTS };
 
