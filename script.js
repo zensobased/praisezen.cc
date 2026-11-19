@@ -417,9 +417,6 @@
   function applyAvatar(user) {
     applyDecoration(user);
 
-    // no custom Discord avatar? keep the pfp that ships with the repo
-    if (!user || !user.avatar) return;
-
     const url = discordAvatar(user, 512);
     if (!url || url === liveAvatar || !avatarImg) return;
 
