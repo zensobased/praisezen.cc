@@ -338,13 +338,14 @@ body {
   height: 172px;
 }
 
-/* Discord avatar decoration: same 288px preset the client draws, layered
-   straight over the pfp so it frames/overflows the circle identically. */
+/* Discord avatar decoration. Discord's preset canvas is 1.2x the avatar
+   (e.g. a 640px circle inside a 768px square), so the decoration is drawn
+   at 120% and centred on the avatar instead of filling it. */
 .avatar-decoration {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
   object-fit: contain;
   pointer-events: none;
   user-select: none;

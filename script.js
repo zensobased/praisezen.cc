@@ -458,10 +458,12 @@
   }
 
   refreshPresence();
-  window.setInterval(refreshPresence, 30000);
+  // keep the avatar, decoration and status in step with Discord
+  window.setInterval(refreshPresence, 15000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshPresence();
   });
+  window.addEventListener("focus", refreshPresence);
 
   /* ---------- hidden admin (alt + y, or hold the view count) ---------- */
 
