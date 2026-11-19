@@ -67,6 +67,13 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatViews = (n) => new Intl.NumberFormat("en-US").format(n);
 
+  // ?views=N pins the displayed view count locally and skips the API bump
+  const viewsParam = new URLSearchParams(window.location.search).get("views");
+  const VIEWS_OVERRIDE =
+    viewsParam !== null && String(viewsParam).trim() !== "" && Number.isFinite(Number(viewsParam))
+      ? Math.max(0, Math.floor(Number(viewsParam)))
+      : null;
+
   const state = { ...DEFAULTS };
 
   let entered = false;
@@ -149,10 +156,15 @@
       state.backgroundKind = data.backgroundKind.trim();
     }
 
-    const nextViews = Number(data.views);
-    if (Number.isFinite(nextViews) && nextViews >= 0) {
-      state.views = Math.floor(nextViews);
-      if (!entered) views.textContent = formatViews(state.views);
+    if (VIEWS_OVERRIDE !== null) {
+      state.views = VIEWS_OVERRIDE;
+      if (!entered) views.textContent = formatViews(VIEWS_OVERRIDE);
+    } else {
+      const nextViews = Number(data.views);
+      if (Number.isFinite(nextViews) && nextViews >= 0) {
+        state.views = Math.floor(nextViews);
+        if (!entered) views.textContent = formatViews(state.views);
+      }
     }
   }
 
@@ -184,6 +196,11 @@
     } catch (err) {
       return state.views;
     }
+  }
+
+  if (VIEWS_OVERRIDE !== null) {
+    state.views = VIEWS_OVERRIDE;
+    if (views) views.textContent = formatViews(VIEWS_OVERRIDE);
   }
 
   applyProfile(readCache());
@@ -302,16 +319,22 @@
     loader.classList.add("is-done");
     window.setTimeout(() => loader.remove(), 700);
 
-    const optimistic = state.views + 1;
-    views.textContent = "0";
-    countUp(views, optimistic);
+    if (VIEWS_OVERRIDE !== null) {
+      state.views = VIEWS_OVERRIDE;
+      viewsLocked = true;
+      views.textContent = formatViews(VIEWS_OVERRIDE);
+    } else {
+      const optimistic = state.views + 1;
+      views.textContent = "0";
+      countUp(views, optimistic);
 
-    bumpViews().then((actual) => {
-      if (actual !== optimistic) {
-        viewsLocked = true;
-        views.textContent = formatViews(actual);
-      }
-    });
+      bumpViews().then((actual) => {
+        if (actual !== optimistic) {
+          viewsLocked = true;
+          views.textContent = formatViews(actual);
+        }
+      });
+    }
 
     startTyping();
 
