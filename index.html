@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page/api/og.png" />
   <link rel="icon" id="favicon" href="assets/pfp.png" />
   <link rel="preload" href="assets/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
   <!-- background -->
@@ -94,6 +94,22 @@
           </div>
         </div>
       </div>
+      <a class="server reveal" data-delay="4" id="serverCard"
+        href="https://discord.gg/richfg" target="_blank" rel="noopener noreferrer"
+        aria-label="Join the /richfg #fg Discord server">
+        <img class="server-icon" id="serverIcon" alt=""
+          src="https://cdn.discordapp.com/icons/1540715130680254504/a66f3adc5a5026c19858f13f28541e38.png?size=128"
+          width="44" height="44" loading="lazy" />
+        <span class="server-info">
+          <span class="server-name" id="serverName">/richfg #fg</span>
+          <span class="server-stats">
+            <span class="server-online"><span class="server-dot" aria-hidden="true"></span><span id="serverOnline">39</span> online</span>
+            <span class="server-sep" aria-hidden="true">&middot;</span>
+            <span><span id="serverMembers">91</span> members</span>
+          </span>
+        </span>
+        <span class="server-join">join</span>
+      </a>
     </div>
   </main>
 
@@ -182,6 +198,6 @@
   </div>
 
   <script src="background.js?v=1"></script>
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>

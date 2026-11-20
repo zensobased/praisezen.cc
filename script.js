@@ -469,6 +469,46 @@
   });
   window.addEventListener("focus", refreshPresence);
 
+  /* ---------- discord server widget ---------- */
+
+  const SERVER_INVITE = "richfg";
+  const INVITE_API = `https://discord.com/api/v10/invites/${SERVER_INVITE}?with_counts=true`;
+
+  const serverIcon = document.getElementById("serverIcon");
+  const serverName = document.getElementById("serverName");
+  const serverOnline = document.getElementById("serverOnline");
+  const serverMembers = document.getElementById("serverMembers");
+
+  async function refreshServer() {
+    if (!serverOnline || !serverMembers) return;
+    try {
+      const res = await fetch(INVITE_API, { cache: "no-store" });
+      if (!res.ok) throw new Error(`invite ${res.status}`);
+      const data = await res.json();
+      const guild = data.guild;
+      if (!guild) return;
+
+      if (guild.name && serverName) serverName.textContent = guild.name;
+      if (guild.id && guild.icon && serverIcon) {
+        serverIcon.src = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+      }
+      if (typeof data.approximate_presence_count === "number") {
+        serverOnline.textContent = data.approximate_presence_count.toLocaleString("en-US");
+      }
+      if (typeof data.approximate_member_count === "number") {
+        serverMembers.textContent = data.approximate_member_count.toLocaleString("en-US");
+      }
+    } catch (err) {
+      // offline / rate limited: keep the numbers already on the card
+    }
+  }
+
+  refreshServer();
+  window.setInterval(refreshServer, 60000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshServer();
+  });
+
   /* ---------- hidden admin (alt + y, or hold the view count) ---------- */
 
   function setHint(text, isError) {
