@@ -471,9 +471,10 @@
 
   /* ---------- discord server widget ---------- */
 
-  const SERVER_INVITE = "richfg";
+  const SERVER_INVITE = "sarcastic";
   const INVITE_API = `https://discord.com/api/v10/invites/${SERVER_INVITE}?with_counts=true`;
 
+  const serverCard = document.getElementById("serverCard");
   const serverIcon = document.getElementById("serverIcon");
   const serverName = document.getElementById("serverName");
   const serverOnline = document.getElementById("serverOnline");
@@ -488,6 +489,8 @@
       const guild = data.guild;
       if (!guild) return;
 
+      // the join link follows the invite code, so a rename needs no edit
+      if (serverCard) serverCard.href = `https://discord.gg/${data.code || SERVER_INVITE}`;
       if (guild.name && serverName) serverName.textContent = guild.name;
       if (guild.id && guild.icon && serverIcon) {
         serverIcon.src = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
@@ -504,7 +507,8 @@
   }
 
   refreshServer();
-  window.setInterval(refreshServer, 60000);
+  window.setInterval(refreshServer, 30000);
+  window.addEventListener("focus", refreshServer);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshServer();
   });
