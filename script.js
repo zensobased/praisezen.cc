@@ -104,6 +104,117 @@
   let backgrounds = [];
   let backgroundsLoading = false;
 
+  /* ---------- card visibility (admin only) ---------- */
+
+  // the profile API keeps a fixed set of fields and drops anything unknown, so
+  // the three switches travel in the bio as an invisible suffix: U+2063 followed
+  // by one zero-width character per card. With everything showing the bio is
+  // left exactly as typed.
+  const CARD_KEYS = ["profile", "server", "spotify"];
+  const CARD_MARK = "\u2063";
+  const CARD_OFF = "\u200b";
+  const CARD_ON = "\u200c";
+  const CARD_BUDGET = 76;
+
+  const cardPanels = {
+    profile: card,
+    server: document.getElementById("serverCard"),
+    spotify: document.getElementById("spotifyCard"),
+  };
+  const cardsShown = { profile: true, server: true, spotify: true };
+
+  function applyCards(flags) {
+    if (flags) {
+      Object.keys(flags).forEach((key) => {
+        cardsShown[key] = flags[key] !== false;
+      });
+    }
+
+    CARD_KEYS.forEach((key) => {
+      const el = cardPanels[key];
+      const input = adminCardInputs[key];
+      const shown = cardsShown[key] !== false;
+
+      if (el) {
+        el.classList.toggle("is-hidden", !shown);
+        if (!shown) {
+          // drop any leftover tilt so the card comes back level
+          el.style.removeProperty("transform");
+          el.classList.remove("is-tilting");
+        }
+      }
+      if (input) input.checked = shown;
+    });
+  }
+
+  function decodeCards(bio) {
+    const raw = typeof bio === "string" ? bio : "";
+    const at = raw.lastIndexOf(CARD_MARK);
+    if (at === -1) return { text: raw, flags: null };
+
+    const bits = raw.slice(at + CARD_MARK.length).split("");
+    if (bits.length !== CARD_KEYS.length) return { text: raw, flags: null };
+
+    const flags = {};
+    for (let index = 0; index < CARD_KEYS.length; index += 1) {
+      if (bits[index] === CARD_ON) flags[CARD_KEYS[index]] = true;
+      else if (bits[index] === CARD_OFF) flags[CARD_KEYS[index]] = false;
+      else return { text: raw, flags: null };
+    }
+
+    return { text: raw.slice(0, at), flags };
+  }
+
+  function encodeCards(bio) {
+    const bits = CARD_KEYS.map((key) => (cardsShown[key] === false ? CARD_OFF : CARD_ON)).join("");
+    if (bits.indexOf(CARD_OFF) === -1) return bio || "";
+    return (bio || "").slice(0, CARD_BUDGET) + CARD_MARK + bits;
+  }
+
+  function panelBio() {
+    if (adminBioInput) return adminBioInput.value.trim();
+    return state.bio;
+  }
+
+  async function persistCards() {
+    if (!adminSecret) return false;
+
+    const clean = panelBio();
+
+    try {
+      await saveProfile({ bio: encodeCards(clean) });
+      state.bio = clean;
+      if (bioEl) bioEl.textContent = clean;
+      if (descriptionMeta) descriptionMeta.setAttribute("content", clean);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  CARD_KEYS.forEach((key) => {
+    const input = adminCardInputs[key];
+    if (!input) return;
+
+    input.addEventListener("change", async () => {
+      const before = cardsShown[key];
+      cardsShown[key] = input.checked;
+      applyCards();
+
+      setHint("saving…", false);
+      const saved = await persistCards();
+
+      if (saved) {
+        setHint(input.checked ? `${key} card shown` : `${key} card hidden`, false);
+        return;
+      }
+
+      cardsShown[key] = before;
+      applyCards();
+      setHint("couldn't save the cards", true);
+    });
+  });
+
   /* ---------- profile cache ---------- */
 
   function readCache() {
@@ -132,9 +243,11 @@
     }
 
     if (typeof data.bio === "string") {
-      state.bio = data.bio;
-      if (bioEl) bioEl.textContent = data.bio;
-      if (descriptionMeta) descriptionMeta.setAttribute("content", data.bio);
+      const bio = decodeCards(data.bio);
+      state.bio = bio.text;
+      if (bioEl) bioEl.textContent = bio.text;
+      if (descriptionMeta) descriptionMeta.setAttribute("content", bio.text);
+      applyCards(bio.flags || { profile: true, server: true, spotify: true });
     }
 
     if (typeof data.location === "string" && data.location.trim()) {
@@ -1145,7 +1258,7 @@
 
       const payload = {
         handle: adminHandleInput.value.trim() || state.handle,
-        bio: adminBioInput.value.trim(),
+        bio: encodeCards(adminBioInput.value.trim()),
         location: adminLocationInput.value.trim() || state.location,
         lastfm: adminLastfmInput ? adminLastfmInput.value.trim().toLowerCase() : "",
         song: adminSongSelect ? adminSongSelect.value : state.songKey || "",
@@ -1221,77 +1334,6 @@
 
     viewsStat.addEventListener("contextmenu", (e) => e.preventDefault());
   }
-
-  /* ---------- card visibility (admin only) ---------- */
-
-  const CARD_STORE = "zen.cards.owner";
-  const CARD_KEYS = ["profile", "server", "spotify"];
-  const cardPanels = {
-    profile: card,
-    server: document.getElementById("serverCard"),
-    spotify: document.getElementById("spotifyCard"),
-  };
-  const cardsShown = { profile: true, server: true, spotify: true };
-
-  function applyCards() {
-    CARD_KEYS.forEach((key) => {
-      const el = cardPanels[key];
-      const input = adminCardInputs[key];
-      const shown = cardsShown[key] !== false;
-
-      if (el) {
-        el.classList.toggle("is-hidden", !shown);
-        if (!shown) {
-          // drop any leftover tilt so the card comes back level
-          el.style.removeProperty("transform");
-          el.classList.remove("is-tilting");
-        }
-      }
-      if (input) input.checked = shown;
-    });
-  }
-
-  function saveCards() {
-    try {
-      window.localStorage.setItem(CARD_STORE, JSON.stringify(cardsShown));
-    } catch (err) {
-      /* private mode: the choice just won't outlive the tab */
-    }
-  }
-
-  function loadCards() {
-    // the old public pills could have hidden cards for any visitor; drop that
-    try {
-      window.localStorage.removeItem("zen.cards");
-    } catch (err) {}
-
-    try {
-      const saved = JSON.parse(window.localStorage.getItem(CARD_STORE) || "null");
-      if (saved && typeof saved === "object") {
-        CARD_KEYS.forEach((key) => {
-          if (saved[key] === false) cardsShown[key] = false;
-        });
-      }
-    } catch (err) {
-      /* no saved choice */
-    }
-
-    applyCards();
-  }
-
-  CARD_KEYS.forEach((key) => {
-    const input = adminCardInputs[key];
-    if (!input) return;
-
-    input.addEventListener("change", () => {
-      cardsShown[key] = input.checked;
-      applyCards();
-      saveCards();
-      setHint(input.checked ? `${key} card shown` : `${key} card hidden`, false);
-    });
-  });
-
-  loadCards();
 
   /* ---------- 3d tilt (each card tilts on its own) ---------- */
 
