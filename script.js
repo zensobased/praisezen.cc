@@ -1214,78 +1214,151 @@
     viewsStat.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
-  /* ---------- 3d tilt (padded box around the card) ---------- */
+  /* ---------- card visibility ---------- */
 
-  const zone = tiltBox || card;
+  const CARD_STORE = "zen.cards";
+  const cardPanels = {
+    profile: card,
+    server: document.getElementById("serverCard"),
+    spotify: document.getElementById("spotifyCard"),
+  };
+  const cardToggles = Array.from(document.querySelectorAll("[data-toggle]"));
+  const hiddenPanels = new Set();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(CARD_STORE) || "{}");
+    Object.keys(cardPanels).forEach((key) => {
+      if (saved[key] === false) hiddenPanels.add(key);
+    });
+  } catch (err) {
+    // no saved choice yet
+  }
+
+  function applyCardVisibility() {
+    const snapshot = {};
+
+    Object.keys(cardPanels).forEach((key) => {
+      const el = cardPanels[key];
+      const shown = !hiddenPanels.has(key);
+      snapshot[key] = shown;
+      if (!el) return;
+
+      el.classList.toggle("is-hidden", !shown);
+      if (!shown) {
+        // drop any leftover tilt so it comes back level
+        el.style.removeProperty("transform");
+        el.classList.remove("is-tilting");
+      }
+    });
+
+    cardToggles.forEach((btn) => {
+      const on = !hiddenPanels.has(btn.dataset.toggle);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+
+    try {
+      localStorage.setItem(CARD_STORE, JSON.stringify(snapshot));
+    } catch (err) {
+      // storage can be blocked; the page still works for this visit
+    }
+  }
+
+  cardToggles.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.toggle;
+      if (!key || !cardPanels[key]) return;
+
+      if (hiddenPanels.has(key)) hiddenPanels.delete(key);
+      else hiddenPanels.add(key);
+
+      applyCardVisibility();
+    });
+  });
+
+  applyCardVisibility();
+
+  /* ---------- 3d tilt (each card tilts on its own) ---------- */
+
+  // the profile card gets a little more travel than the two flat cards, and the
+  // transform is written inline so the reveal animation's transform can't win
+  const tiltCards = [
+    { el: card, max: 9, depth: 1100 },
+    { el: cardPanels.server, max: 6, depth: 800 },
+    { el: cardPanels.spotify, max: 6, depth: 800 },
+  ].filter((item) => item.el);
+
   const canTilt =
-    card &&
-    zone &&
+    tiltCards.length > 0 &&
     !reducedMotion &&
     window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   if (canTilt) {
-    const MAX = 14;
-    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    let curX = 0;
-    let curY = 0;
-    let tgtX = 0;
-    let tgtY = 0;
-    let active = false;
-    let raf = 0;
+    tiltCards.forEach(({ el, max, depth }) => {
+      const cur = { x: 0, y: 0 };
+      const tgt = { x: 0, y: 0 };
+      let active = false;
+      let raf = 0;
 
-    function frame() {
-      curX += (tgtX - curX) * 0.12;
-      curY += (tgtY - curY) * 0.12;
-      const settled = Math.abs(tgtX - curX) < 0.02 && Math.abs(tgtY - curY) < 0.02;
+      const paint = () => {
+        el.style.transform =
+          `perspective(${depth}px) ` +
+          `rotateX(${cur.x.toFixed(2)}deg) rotateY(${cur.y.toFixed(2)}deg)`;
+      };
 
-      card.style.setProperty("--rx", curX.toFixed(2) + "deg");
-      card.style.setProperty("--ry", curY.toFixed(2) + "deg");
+      function frame() {
+        cur.x += (tgt.x - cur.x) * 0.14;
+        cur.y += (tgt.y - cur.y) * 0.14;
+        const settled = Math.abs(tgt.x - cur.x) < 0.02 && Math.abs(tgt.y - cur.y) < 0.02;
 
-      if (!settled) {
-        raf = requestAnimationFrame(frame);
-        return;
-      }
+        paint();
 
-      raf = 0;
-      if (!active) card.classList.remove("is-tilting");
-    }
-
-    function run() {
-      if (!raf) raf = requestAnimationFrame(frame);
-    }
-
-    zone.addEventListener(
-      "pointermove",
-      (e) => {
-        const rect = zone.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-
-        const px = clamp((e.clientX - rect.left) / rect.width, 0, 1) * 2 - 1;
-        const py = clamp((e.clientY - rect.top) / rect.height, 0, 1) * 2 - 1;
-
-        tgtY = px * MAX;
-        tgtX = -py * MAX * 0.75;
-
-        if (!active) {
-          active = true;
-          card.classList.add("is-tilting");
+        if (!settled) {
+          raf = requestAnimationFrame(frame);
+          return;
         }
 
+        raf = 0;
+        if (!active) el.classList.remove("is-tilting");
+      }
+
+      function run() {
+        if (!raf) raf = requestAnimationFrame(frame);
+      }
+
+      el.addEventListener(
+        "pointermove",
+        (e) => {
+          const rect = el.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+
+          const px = clamp((e.clientX - rect.left) / rect.width, 0, 1) * 2 - 1;
+          const py = clamp((e.clientY - rect.top) / rect.height, 0, 1) * 2 - 1;
+
+          tgt.y = px * max;
+          tgt.x = -py * max * 0.7;
+
+          if (!active) {
+            active = true;
+            el.classList.add("is-tilting");
+          }
+
+          run();
+        },
+        { passive: true }
+      );
+
+      const reset = () => {
+        tgt.x = 0;
+        tgt.y = 0;
+        active = false;
         run();
-      },
-      { passive: true }
-    );
+      };
 
-    const reset = () => {
-      tgtX = 0;
-      tgtY = 0;
-      active = false;
-      run();
-    };
-
-    zone.addEventListener("pointerleave", reset);
-    zone.addEventListener("pointercancel", reset);
-    window.addEventListener("blur", reset);
+      el.addEventListener("pointerleave", reset);
+      el.addEventListener("pointercancel", reset);
+      window.addEventListener("blur", reset);
+    });
   }
 })();

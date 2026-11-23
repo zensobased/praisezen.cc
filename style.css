@@ -283,8 +283,6 @@ body {
   justify-content: center;
   min-height: 100dvh;
   padding: 42px 16px;
-  perspective: 1100px;
-  perspective-origin: 50% 45%;
 }
 
 .tilt-box {
@@ -300,7 +298,7 @@ body {
   gap: 30px;
   padding: 10px 18px;
   transform-style: preserve-3d;
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
@@ -319,9 +317,11 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* a shorter lift keeps the avatar and its decoration inside the card's own
+   footprint instead of leaning into the card below */
 .card.is-tilting .avatar,
 .card.is-tilting .avatar-decoration {
-  transform: translateZ(58px);
+  transform: translateZ(44px);
 }
 
 .avatar-decoration {
@@ -329,7 +329,7 @@ body {
 }
 
 .card.is-tilting .info {
-  transform: translateZ(34px);
+  transform: translateZ(26px);
 }
 
 .avatar-wrap {
@@ -787,7 +787,16 @@ body.is-ready .reveal {
   backdrop-filter: blur(6px);
   color: var(--fg);
   text-decoration: none;
-  transition: background 0.25s ease, border-color 0.25s ease;
+  transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.server.is-tilting,
+.spotify.is-tilting {
+  transition: transform 0.1s linear, background 0.25s ease, border-color 0.25s ease;
 }
 
 .server:hover {
@@ -884,7 +893,11 @@ body.is-ready .reveal {
   backdrop-filter: blur(6px);
   color: var(--fg);
   text-decoration: none;
-  transition: background 0.25s ease, border-color 0.25s ease;
+  transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .spotify[data-state="idle"] {
@@ -1008,6 +1021,51 @@ a.spotify[href]:focus-visible {
 .spotify-tag svg {
   width: 15px;
   height: 15px;
+}
+
+[data-card].is-hidden {
+  display: none !important;
+}
+
+/* ---------- card toggles ---------- */
+
+.card-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.card-toggle {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(194, 184, 184, 0.14);
+  background: transparent;
+  color: rgba(194, 184, 184, 0.45);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.card-toggle[aria-pressed="true"] {
+  color: var(--fg);
+  border-color: rgba(194, 184, 184, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.card-toggle:hover {
+  color: var(--fg);
+}
+
+.card-toggle:focus-visible {
+  outline: 2px solid rgba(194, 184, 184, 0.5);
+  outline-offset: 2px;
 }
 
 @media (max-width: 640px), (hover: none) and (pointer: coarse) {

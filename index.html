@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page/api/og.png" />
   <link rel="icon" id="favicon" href="assets/pfp.png" />
   <link rel="preload" href="assets/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="style.css?v=16" />
+  <link rel="stylesheet" href="style.css?v=17" />
 </head>
 <body>
   <!-- background -->
@@ -61,7 +61,7 @@
   <!-- profile -->
   <main class="profile">
     <div class="tilt-box" id="tiltBox">
-      <div class="card">
+      <div class="card" data-card="profile">
         <div class="avatar-wrap reveal" data-delay="0">
           <img class="avatar" id="avatar" src="assets/pfp.png" alt="zen avatar" />
           <img class="avatar-decoration" id="avatarDecoration" alt="" aria-hidden="true" hidden />
@@ -94,7 +94,7 @@
           </div>
         </div>
       </div>
-      <a class="server reveal" data-delay="4" id="serverCard"
+      <a class="server reveal" data-delay="4" id="serverCard" data-card="server"
         href="https://discord.gg/sarcastic" target="_blank" rel="noopener noreferrer"
         aria-label="Join the /sarcastic Discord server">
         <img class="server-icon" id="serverIcon" alt=""
@@ -110,7 +110,7 @@
         </span>
         <span class="server-join">join</span>
       </a>
-      <a class="spotify reveal" data-delay="4" id="spotifyCard"
+      <a class="spotify reveal" data-delay="4" id="spotifyCard" data-card="spotify"
         aria-label="Spotify &#8212; not playing">
         <span class="spotify-art">
           <img id="spotifyArt" alt="" width="42" height="42" hidden />
@@ -129,6 +129,11 @@
           </svg>
         </span>
       </a>
+      <div class="card-toggles reveal" data-delay="4" role="group" aria-label="Show or hide cards">
+        <button class="card-toggle" type="button" data-toggle="profile" aria-pressed="true">profile</button>
+        <button class="card-toggle" type="button" data-toggle="server" aria-pressed="true">server</button>
+        <button class="card-toggle" type="button" data-toggle="spotify" aria-pressed="true">spotify</button>
+      </div>
     </div>
   </main>
 
@@ -217,6 +222,6 @@
   </div>
 
   <script src="background.js?v=1"></script>
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=17"></script>
 </body>
 </html>
