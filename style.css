@@ -1027,45 +1027,36 @@ a.spotify[href]:focus-visible {
   display: none !important;
 }
 
-/* ---------- card toggles ---------- */
+/* ---------- admin card switches ---------- */
 
-.card-toggles {
+.admin-cards-row {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  gap: 14px;
+  font-size: 12px;
+}
+
+.admin-cards-row label {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  margin-top: 2px;
-}
-
-.card-toggle {
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(194, 184, 184, 0.14);
-  background: transparent;
-  color: rgba(194, 184, 184, 0.45);
-  font: inherit;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  line-height: 1;
+  color: var(--fg);
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.card-toggle[aria-pressed="true"] {
-  color: var(--fg);
-  border-color: rgba(194, 184, 184, 0.28);
-  background: rgba(255, 255, 255, 0.05);
+.admin-field .admin-cards-row input {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  flex: none;
+  accent-color: #f2efef;
 }
 
-.card-toggle:hover {
-  color: var(--fg);
-}
-
-.card-toggle:focus-visible {
-  outline: 2px solid rgba(194, 184, 184, 0.5);
-  outline-offset: 2px;
+.admin-cards-note {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(194, 184, 184, 0.4);
 }
 
 @media (max-width: 640px), (hover: none) and (pointer: coarse) {

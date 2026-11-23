@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page/api/og.png" />
   <link rel="icon" id="favicon" href="assets/pfp.png" />
   <link rel="preload" href="assets/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 <body>
   <!-- background -->
@@ -129,11 +129,6 @@
           </svg>
         </span>
       </a>
-      <div class="card-toggles reveal" data-delay="4" role="group" aria-label="Show or hide cards">
-        <button class="card-toggle" type="button" data-toggle="profile" aria-pressed="true">profile</button>
-        <button class="card-toggle" type="button" data-toggle="server" aria-pressed="true">server</button>
-        <button class="card-toggle" type="button" data-toggle="spotify" aria-pressed="true">spotify</button>
-      </div>
     </div>
   </main>
 
@@ -208,6 +203,16 @@
         <input type="file" id="adminBackgroundFile" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime,video/x-m4v" />
       </label>
 
+      <div class="admin-field admin-cards" id="adminCardsField" hidden>
+        <span>cards</span>
+        <div class="admin-cards-row">
+          <label><input type="checkbox" id="adminCardProfile" checked /><span>profile</span></label>
+          <label><input type="checkbox" id="adminCardServer" checked /><span>server</span></label>
+          <label><input type="checkbox" id="adminCardSpotify" checked /><span>spotify</span></label>
+        </div>
+        <span class="admin-cards-note">saved on this device</span>
+      </div>
+
       <label class="admin-field" id="adminViewsField" hidden>
         <span>views</span>
         <input type="number" id="adminViews" min="0" step="1" inputmode="numeric" />
@@ -222,6 +227,6 @@
   </div>
 
   <script src="background.js?v=1"></script>
-  <script src="script.js?v=17"></script>
+  <script src="script.js?v=18"></script>
 </body>
 </html>

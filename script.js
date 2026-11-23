@@ -66,6 +66,12 @@
   const adminLocationInput = document.getElementById("adminLocation");
   const adminLastfmInput = document.getElementById("adminLastfm");
   const adminViewsInput = document.getElementById("adminViews");
+  const adminCardsField = document.getElementById("adminCardsField");
+  const adminCardInputs = {
+    profile: document.getElementById("adminCardProfile"),
+    server: document.getElementById("adminCardServer"),
+    spotify: document.getElementById("adminCardSpotify"),
+  };
   const adminSongField = document.getElementById("adminSongField");
   const adminSongSelect = document.getElementById("adminSong");
   const adminSongUploadField = document.getElementById("adminSongUploadField");
@@ -823,6 +829,7 @@
     if (adminBioInput) adminBioInput.value = bioEl ? bioEl.textContent : "";
     if (adminLocationInput) adminLocationInput.value = locationEl ? locationEl.textContent : "";
     if (adminLastfmInput) adminLastfmInput.value = state.lastfm || "";
+    applyCards();
     if (adminViewsInput) adminViewsInput.value = String(state.views);
 
     if (adminSongSelect) {
@@ -868,6 +875,7 @@
       adminSongUploadField,
       adminBackgroundField,
       adminBackgroundUploadField,
+      adminCardsField,
       adminViewsField,
       adminResetBtn,
     ].forEach((field) => {
@@ -1214,68 +1222,76 @@
     viewsStat.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
-  /* ---------- card visibility ---------- */
+  /* ---------- card visibility (admin only) ---------- */
 
-  const CARD_STORE = "zen.cards";
+  const CARD_STORE = "zen.cards.owner";
+  const CARD_KEYS = ["profile", "server", "spotify"];
   const cardPanels = {
     profile: card,
     server: document.getElementById("serverCard"),
     spotify: document.getElementById("spotifyCard"),
   };
-  const cardToggles = Array.from(document.querySelectorAll("[data-toggle]"));
-  const hiddenPanels = new Set();
+  const cardsShown = { profile: true, server: true, spotify: true };
 
-  try {
-    const saved = JSON.parse(localStorage.getItem(CARD_STORE) || "{}");
-    Object.keys(cardPanels).forEach((key) => {
-      if (saved[key] === false) hiddenPanels.add(key);
+  function applyCards() {
+    CARD_KEYS.forEach((key) => {
+      const el = cardPanels[key];
+      const input = adminCardInputs[key];
+      const shown = cardsShown[key] !== false;
+
+      if (el) {
+        el.classList.toggle("is-hidden", !shown);
+        if (!shown) {
+          // drop any leftover tilt so the card comes back level
+          el.style.removeProperty("transform");
+          el.classList.remove("is-tilting");
+        }
+      }
+      if (input) input.checked = shown;
     });
-  } catch (err) {
-    // no saved choice yet
   }
 
-  function applyCardVisibility() {
-    const snapshot = {};
-
-    Object.keys(cardPanels).forEach((key) => {
-      const el = cardPanels[key];
-      const shown = !hiddenPanels.has(key);
-      snapshot[key] = shown;
-      if (!el) return;
-
-      el.classList.toggle("is-hidden", !shown);
-      if (!shown) {
-        // drop any leftover tilt so it comes back level
-        el.style.removeProperty("transform");
-        el.classList.remove("is-tilting");
-      }
-    });
-
-    cardToggles.forEach((btn) => {
-      const on = !hiddenPanels.has(btn.dataset.toggle);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-
+  function saveCards() {
     try {
-      localStorage.setItem(CARD_STORE, JSON.stringify(snapshot));
+      window.localStorage.setItem(CARD_STORE, JSON.stringify(cardsShown));
     } catch (err) {
-      // storage can be blocked; the page still works for this visit
+      /* private mode: the choice just won't outlive the tab */
     }
   }
 
-  cardToggles.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.toggle;
-      if (!key || !cardPanels[key]) return;
+  function loadCards() {
+    // the old public pills could have hidden cards for any visitor; drop that
+    try {
+      window.localStorage.removeItem("zen.cards");
+    } catch (err) {}
 
-      if (hiddenPanels.has(key)) hiddenPanels.delete(key);
-      else hiddenPanels.add(key);
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(CARD_STORE) || "null");
+      if (saved && typeof saved === "object") {
+        CARD_KEYS.forEach((key) => {
+          if (saved[key] === false) cardsShown[key] = false;
+        });
+      }
+    } catch (err) {
+      /* no saved choice */
+    }
 
-      applyCardVisibility();
+    applyCards();
+  }
+
+  CARD_KEYS.forEach((key) => {
+    const input = adminCardInputs[key];
+    if (!input) return;
+
+    input.addEventListener("change", () => {
+      cardsShown[key] = input.checked;
+      applyCards();
+      saveCards();
+      setHint(input.checked ? `${key} card shown` : `${key} card hidden`, false);
     });
   });
 
-  applyCardVisibility();
+  loadCards();
 
   /* ---------- 3d tilt (each card tilts on its own) ---------- */
 
