@@ -1077,7 +1077,11 @@ a.spotify[href]:focus-visible {
       calc(18px + env(safe-area-inset-left));
   }
 
+  /* the column is content-sized on its own here, which made the cards as wide
+     as the widest child; pinning it full width keeps one column, like the
+     408px card stack on desktop */
   .tilt-box {
+    width: 100%;
     padding: 16px 12px;
     gap: 16px;
   }
