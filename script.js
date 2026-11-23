@@ -445,6 +445,39 @@
   song.addEventListener("pause", syncAudio);
   song.addEventListener("ended", syncAudio);
 
+  /* ---------- volume (pointer devices) ---------- */
+
+  const volumeInput = document.getElementById("volume");
+  const VOLUME_KEY = "zen.volume";
+
+  function applyVolume(value, remember) {
+    const level = Math.min(1, Math.max(0, Number(value)));
+    song.volume = Number.isFinite(level) ? level : 1;
+    if (volumeInput && Math.abs(Number(volumeInput.value) - song.volume) > 0.001) {
+      volumeInput.value = String(song.volume);
+    }
+    if (remember) {
+      try {
+        window.localStorage.setItem(VOLUME_KEY, String(song.volume));
+      } catch (err) {
+        /* private mode: the level just resets next visit */
+      }
+    }
+  }
+
+  let savedVolume = 1;
+  try {
+    const stored = window.localStorage.getItem(VOLUME_KEY);
+    if (stored !== null) savedVolume = Number(stored);
+  } catch (err) {
+    /* no saved level */
+  }
+  applyVolume(savedVolume, false);
+
+  if (volumeInput) {
+    volumeInput.addEventListener("input", () => applyVolume(volumeInput.value, true));
+  }
+
   /* ---------- click to enter ---------- */
 
   function enter() {

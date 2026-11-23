@@ -153,11 +153,18 @@ body {
 
 /* ---------- audio button ---------- */
 
-.audio-btn {
+.audio-wrap {
   position: fixed;
   top: 15px;
   left: 15px;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.audio-btn {
+  position: relative;
   display: grid;
   place-items: center;
   width: 60px;
@@ -216,6 +223,82 @@ body {
 
 .audio-btn.is-playing .icon-volume {
   animation: none;
+}
+
+/* the volume slider only exists where there is a pointer to hover with */
+.audio-vol {
+  display: none;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(6, 7, 6, 0.235);
+  background: rgba(6, 7, 6, 0.26);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 641px) {
+  .audio-vol {
+    display: flex;
+    opacity: 0;
+    transform: translateX(-6px);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  .audio-wrap:hover .audio-vol,
+  .audio-wrap:focus-within .audio-vol {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+.audio-vol-range {
+  width: 92px;
+  height: 18px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.audio-vol-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(194, 184, 184, 0.22);
+}
+
+.audio-vol-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--fg);
+  box-shadow: 0 0 6px rgba(194, 184, 184, 0.45);
+}
+
+.audio-vol-range::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(194, 184, 184, 0.22);
+}
+
+.audio-vol-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fg);
+  box-shadow: 0 0 6px rgba(194, 184, 184, 0.45);
+}
+
+.audio-vol-range:focus-visible {
+  outline: 2px solid rgba(194, 184, 184, 0.5);
+  outline-offset: 4px;
+  border-radius: 99px;
 }
 
 @keyframes speaker {
@@ -1171,9 +1254,12 @@ a.spotify[href]:focus-visible {
     font-size: 13px;
   }
 
-  .audio-btn {
+  .audio-wrap {
     top: calc(12px + env(safe-area-inset-top));
     left: calc(12px + env(safe-area-inset-left));
+  }
+
+  .audio-btn {
     width: 52px;
     height: 52px;
     border-radius: 13px;

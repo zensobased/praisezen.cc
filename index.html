@@ -23,7 +23,7 @@
   <meta name="twitter:image" content="https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page/api/og.png" />
   <link rel="icon" id="favicon" href="assets/pfp.png" />
   <link rel="preload" href="assets/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
   <!-- background -->
@@ -38,7 +38,8 @@
   </div>
 
   <!-- audio toggle -->
-  <button class="audio-btn" id="audioBtn" type="button" aria-label="Play profile song" aria-pressed="false">
+  <div class="audio-wrap">
+    <button class="audio-btn" id="audioBtn" type="button" aria-label="Play profile song" aria-pressed="false">
     <svg class="icon icon-volume" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
         <mask id="volumeMask">
@@ -55,8 +56,12 @@
       <rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor" />
       <rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor" />
     </svg>
-    <audio id="song" src="assets/raininglol.mp3" loop preload="auto"></audio>
-  </button>
+      <audio id="song" src="assets/raininglol.mp3" loop preload="auto"></audio>
+    </button>
+    <div class="audio-vol">
+      <input class="audio-vol-range" id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Profile song volume" />
+    </div>
+  </div>
 
   <!-- profile -->
   <main class="profile">
@@ -227,6 +232,6 @@
   </div>
 
   <script src="background.js?v=1"></script>
-  <script src="script.js?v=19"></script>
+  <script src="script.js?v=20"></script>
 </body>
 </html>
