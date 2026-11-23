@@ -40,6 +40,12 @@
   const decorationImg = document.getElementById("avatarDecoration");
   const favicon = document.getElementById("favicon");
 
+  const spotifyCard = document.getElementById("spotifyCard");
+  const spotifyArt = document.getElementById("spotifyArt");
+  const spotifyTrackEl = document.getElementById("spotifyTrack");
+  const spotifyArtistEl = document.getElementById("spotifyArtist");
+  const spotifyFill = document.getElementById("spotifyFill");
+
   const adminEl = document.getElementById("admin");
   const adminForm = document.getElementById("adminForm");
   const adminKeyField = document.getElementById("adminKeyField");
@@ -444,6 +450,79 @@
     if (discordLabel) discordLabel.textContent = STATUS_LABEL[key];
   }
 
+  /* ---------- spotify now playing ---------- */
+
+  let spotifyStart = 0;
+  let spotifyEnd = 0;
+
+  function paintSpotifyProgress() {
+    if (!spotifyFill) return;
+    if (!spotifyStart || !spotifyEnd || spotifyEnd <= spotifyStart) {
+      spotifyFill.style.transform = "scaleX(0)";
+      return;
+    }
+    const pct = (Date.now() - spotifyStart) / (spotifyEnd - spotifyStart);
+    spotifyFill.style.transform = `scaleX(${Math.min(1, Math.max(0, pct))})`;
+  }
+
+  function showSpotifyIdle() {
+    if (!spotifyCard) return;
+
+    spotifyStart = 0;
+    spotifyEnd = 0;
+    spotifyCard.dataset.state = "idle";
+    spotifyCard.removeAttribute("href");
+    spotifyCard.setAttribute("aria-label", "Spotify — not playing");
+
+    if (spotifyArt) {
+      spotifyArt.hidden = true;
+      spotifyArt.removeAttribute("src");
+    }
+    if (spotifyTrackEl) spotifyTrackEl.textContent = "not playing";
+    if (spotifyArtistEl) spotifyArtistEl.textContent = "spotify";
+    paintSpotifyProgress();
+  }
+
+  function renderSpotify(track) {
+    if (!spotifyCard) return;
+
+    if (!track || !track.song) {
+      showSpotifyIdle();
+      return;
+    }
+
+    spotifyCard.dataset.state = "playing";
+    if (track.track_url) {
+      spotifyCard.href = track.track_url;
+      spotifyCard.target = "_blank";
+      spotifyCard.rel = "noopener noreferrer";
+    }
+    if (spotifyTrackEl) spotifyTrackEl.textContent = track.song;
+    if (spotifyArtistEl) spotifyArtistEl.textContent = track.artist || "spotify";
+    spotifyCard.setAttribute(
+      "aria-label",
+      `Playing ${track.song}${track.artist ? " by " + track.artist : ""} on Spotify`
+    );
+
+    const art = track.album_art_url;
+    if (spotifyArt && art && spotifyArt.getAttribute("src") !== art) {
+      spotifyArt.onload = () => {
+        spotifyArt.hidden = false;
+      };
+      spotifyArt.onerror = () => {
+        spotifyArt.hidden = true;
+      };
+      spotifyArt.src = art;
+    }
+
+    const stamps = track.timestamps || {};
+    spotifyStart = stamps.start || 0;
+    spotifyEnd = stamps.end || 0;
+    paintSpotifyProgress();
+  }
+
+  window.setInterval(paintSpotifyProgress, 1000);
+
   async function refreshPresence() {
     try {
       const res = await fetch(presenceUrl, { cache: "no-store" });
@@ -453,6 +532,7 @@
 
       applyStatus(payload.data.discord_status, payload.data.discord_user);
       applyAvatar(payload.data.discord_user);
+      renderSpotify(payload.data.spotify);
     } catch (err) {
       // keep the local pfp; just report offline once we have no answer at all
       if (!discordPill || discordPill.dataset.status === "loading") {
@@ -463,7 +543,7 @@
 
   refreshPresence();
   // keep the avatar, decoration and status in step with Discord
-  window.setInterval(refreshPresence, 15000);
+  window.setInterval(refreshPresence, 10000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshPresence();
   });
