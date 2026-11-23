@@ -6,8 +6,8 @@
 
   // Spotify Web API. Fill both values after running the one-time connect step at
   // /spotify.html; while they are empty the card falls back to Lanyard.
-  const SPOTIFY_CLIENT_ID = "";
-  const SPOTIFY_REFRESH_TOKEN = "";
+  const SPOTIFY_CLIENT_ID = "5bf154790c7d4c93aef732d4a1af3925";
+  const SPOTIFY_REFRESH_TOKEN = "AQCcEvgTcNvodMzrfSVIzK3CorzCqKse3jHr7SlqQUJOYcjM9Da7_oNbdnaVv-lM_2c-hrjQoX36JvV2m9-juRqvH-HyjP57eAiiJOGLT6Ei91HKY6eh7VIqc1jGXlCFBVQ";
   const spotifyReady = Boolean(SPOTIFY_CLIENT_ID && SPOTIFY_REFRESH_TOKEN);
 
   const DEFAULTS = {
