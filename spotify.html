@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#080808" />
+  <meta name="color-scheme" content="dark" />
+  <title>spotify connect</title>
+  <link rel="icon" href="assets/pfp.png" />
+  <style>
+    @font-face {
+      font-family: "Space Grotesk";
+      src: url("assets/fonts/space-grotesk.woff2") format("woff2");
+      font-weight: 300 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --fg: #f2efef;
+      --muted: rgba(194, 184, 184, 0.55);
+      --line: rgba(194, 184, 184, 0.14);
+      --green: #1db954;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: grid;
+      place-items: center;
+      background: #080808;
+      color: var(--fg);
+      font-family: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 470px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(8, 8, 8, 0.6);
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+
+    .lede {
+      margin: 0 0 20px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .lede a,
+    .hint code,
+    .hint a {
+      color: var(--fg);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    label.field {
+      display: block;
+      margin: 0 0 14px;
+    }
+
+    label.field span {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--fg);
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: rgba(194, 184, 184, 0.4);
+    }
+
+    textarea {
+      resize: vertical;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .uri {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      padding: 9px 11px;
+      border: 1px dashed var(--line);
+      border-radius: 11px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .uri code {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--fg);
+    }
+
+    .steps {
+      margin: 0 0 14px;
+      padding-left: 18px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    button {
+      border: 0;
+      border-radius: 25px;
+      background: var(--fg);
+      color: #080808;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 650;
+      padding: 9px 15px;
+      line-height: 1;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .uri button {
+      flex: none;
+      padding: 7px 12px;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--fg);
+    }
+
+    .go {
+      width: 100%;
+      margin-top: 4px;
+      padding: 12px 16px;
+      font-size: 13px;
+    }
+
+    .hint {
+      margin: 12px 0 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .hint.err {
+      color: #ff8f8f;
+    }
+
+    .result {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .result-title {
+      margin: 0 0 8px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result textarea {
+      margin-bottom: 12px;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 22px;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .back:hover {
+      color: var(--fg);
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">zen</p>
+    <h1>spotify connect</h1>
+    <p class="lede">
+      One-time step that lets the profile read your currently playing track straight from the
+      Spotify Web API. Everything happens in this tab &mdash; no server, and no client secret.
+    </p>
+
+    <ol class="steps">
+      <li>
+        Create an app at
+        <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">developer.spotify.com/dashboard</a>
+        and copy its client ID.
+      </li>
+      <li>In that app&rsquo;s settings, add this exact redirect URI:</li>
+    </ol>
+
+    <p class="uri">
+      <code id="redirectUri">loading&hellip;</code>
+      <button id="copyUri" type="button">copy</button>
+    </p>
+
+    <label class="field">
+      <span>client id</span>
+      <input id="clientId" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="paste from the dashboard" />
+    </label>
+
+    <button class="go" id="connect" type="button">connect spotify</button>
+
+    <p class="hint" id="hint">scope requested: user-read-currently-playing</p>
+
+    <section class="result" id="result" hidden>
+      <p class="result-title">refresh token</p>
+      <textarea id="token" readonly rows="4" spellcheck="false"></textarea>
+      <button class="go" id="copyToken" type="button">copy refresh token</button>
+      <p class="hint">
+        Set <code>SPOTIFY_CLIENT_ID</code> and <code>SPOTIFY_REFRESH_TOKEN</code> near the top of
+        <code>script.js</code>. Treat the token like a password: anyone holding it can read your
+        playback state.
+      </p>
+      <p class="hint" id="live"></p>
+    </section>
+
+    <a class="back" href="./">&larr; back to profile</a>
+  </main>
+
+  <script>
+    (() => {
+      const SCOPE = "user-read-currently-playing";
+      const STORE = "zen.spotify.";
+      const TOKEN_URL = "https://accounts.spotify.com/api/token";
+      const NOW_URL = "https://api.spotify.com/v1/me/player/currently-playing";
+
+      const redirectUri = location.origin + location.pathname;
+      const redirectEl = document.getElementById("redirectUri");
+      const clientIdInput = document.getElementById("clientId");
+      const hint = document.getElementById("hint");
+      const result = document.getElementById("result");
+      const tokenBox = document.getElementById("token");
+      const live = document.getElementById("live");
+
+      redirectEl.textContent = redirectUri;
+
+      function say(text, isError) {
+        hint.textContent = text;
+        hint.classList.toggle("err", Boolean(isError));
+      }
+
+      function b64url(bytes) {
+        let raw = "";
+        new Uint8Array(bytes).forEach((byte) => {
+          raw += String.fromCharCode(byte);
+        });
+        return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      }
+
+      function random(n) {
+        return b64url(crypto.getRandomValues(new Uint8Array(n)));
+      }
+
+      async function challenge(verifier) {
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+        return b64url(digest);
+      }
+
+      async function copy(text, label) {
+        try {
+          await navigator.clipboard.writeText(text);
+          say(label + " copied");
+        } catch (err) {
+          say("couldn't copy — select it manually", true);
+        }
+      }
+
+      document.getElementById("copyUri").addEventListener("click", () => copy(redirectUri, "redirect URI"));
+      document.getElementById("copyToken").addEventListener("click", () => copy(tokenBox.value, "refresh token"));
+
+      clientIdInput.value = localStorage.getItem(STORE + "client") || "";
+
+      document.getElementById("connect").addEventListener("click", async () => {
+        const clientId = clientIdInput.value.trim();
+        if (!clientId) {
+          say("paste your client id first", true);
+          return;
+        }
+
+        localStorage.setItem(STORE + "client", clientId);
+
+        const verifier = random(64);
+        localStorage.setItem(STORE + "verifier", verifier);
+        const state = random(16);
+        localStorage.setItem(STORE + "state", state);
+
+        const params = new URLSearchParams({
+          client_id: clientId,
+          response_type: "code",
+          redirect_uri: redirectUri,
+          code_challenge_method: "S256",
+          code_challenge: await challenge(verifier),
+          scope: SCOPE,
+          state,
+          show_dialog: "true",
+        });
+
+        location.href = "https://accounts.spotify.com/authorize?" + params.toString();
+      });
+
+      async function exchange(code) {
+        const verifier = localStorage.getItem(STORE + "verifier");
+        const clientId = localStorage.getItem(STORE + "client") || clientIdInput.value.trim();
+
+        if (!verifier || !clientId) {
+          say("that sign-in has no stored verifier — press connect again", true);
+          return;
+        }
+
+        say("exchanging the code\u2026");
+
+        const body = new URLSearchParams({
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: redirectUri,
+          client_id: clientId,
+          code_verifier: verifier,
+        });
+
+        try {
+          const res = await fetch(TOKEN_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body,
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.refresh_token) {
+            say("exchange failed: " + (data.error_description || data.error || res.status), true);
+            return;
+          }
+
+          tokenBox.value = data.refresh_token;
+          result.hidden = false;
+          say("connected — keep this tab open until you've copied the token");
+
+          try {
+            const now = await fetch(NOW_URL, {
+              headers: { Authorization: "Bearer " + data.access_token },
+            });
+            if (now.status === 204) {
+              live.textContent = "live check: connected, nothing playing right now.";
+            } else if (now.ok) {
+              const playing = await now.json();
+              const item = playing.item || {};
+              const who = (item.artists || []).map((one) => one.name).join(", ");
+              live.textContent = item.name
+                ? "live check: connected, playing " + item.name + (who ? " — " + who : "") + "."
+                : "live check: connected.";
+            } else {
+              live.textContent = "live check: connected, but the player read returned " + now.status + ".";
+            }
+          } catch (err) {
+            live.textContent = "live check: connected, but the player read failed.";
+          }
+        } catch (err) {
+          say("couldn't reach Spotify — " + err.message, true);
+        }
+      }
+
+      // back from Spotify
+      const params = new URLSearchParams(location.search);
+      const code = params.get("code");
+      const state = params.get("state");
+      const failed = params.get("error");
+
+      if (failed) {
+        say("spotify said: " + failed, true);
+        history.replaceState(null, "", location.pathname);
+      } else if (code) {
+        const expected = localStorage.getItem(STORE + "state");
+        history.replaceState(null, "", location.pathname);
+
+        if (expected && state !== expected) {
+          say("state mismatch — press connect again", true);
+        } else {
+          exchange(code);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

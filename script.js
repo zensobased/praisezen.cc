@@ -4,6 +4,12 @@
   const API_BASE = "https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page";
   const CACHE_KEY = "zen.data";
 
+  // Spotify Web API. Fill both values after running the one-time connect step at
+  // /spotify.html; while they are empty the card falls back to Lanyard.
+  const SPOTIFY_CLIENT_ID = "";
+  const SPOTIFY_REFRESH_TOKEN = "";
+  const spotifyReady = Boolean(SPOTIFY_CLIENT_ID && SPOTIFY_REFRESH_TOKEN);
+
   const DEFAULTS = {
     handle: "@rebornzen",
     bio: "yooo wsp",
@@ -450,6 +456,114 @@
     if (discordLabel) discordLabel.textContent = STATUS_LABEL[key];
   }
 
+  /* ---------- spotify web api ---------- */
+
+  const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
+  const SPOTIFY_NOW_URL =
+    "https://api.spotify.com/v1/me/player/currently-playing?additional_types=track";
+
+  let spotifyToken = "";
+  let spotifyTokenExpires = 0;
+  let spotifyTokenRequest = null;
+
+  // the refresh token is swapped for a short-lived access token in the browser,
+  // so no server and no client secret are involved
+  async function spotifyAccessToken() {
+    if (!spotifyReady) return "";
+    if (spotifyToken && Date.now() < spotifyTokenExpires) return spotifyToken;
+    if (spotifyTokenRequest) return spotifyTokenRequest;
+
+    spotifyTokenRequest = (async () => {
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: SPOTIFY_REFRESH_TOKEN,
+        client_id: SPOTIFY_CLIENT_ID,
+      });
+      const res = await fetch(SPOTIFY_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`spotify token ${res.status}`);
+      const data = await res.json();
+      if (!data.access_token) throw new Error("spotify token missing");
+
+      spotifyToken = data.access_token;
+      // renew a minute early so a request never lands on an expired token
+      const life = Math.max(60, (data.expires_in || 3600) - 60);
+      spotifyTokenExpires = Date.now() + life * 1000;
+      return spotifyToken;
+    })();
+
+    try {
+      return await spotifyTokenRequest;
+    } catch (err) {
+      spotifyToken = "";
+      spotifyTokenExpires = 0;
+      throw err;
+    } finally {
+      spotifyTokenRequest = null;
+    }
+  }
+
+  function spotifyShape(payload) {
+    const item = payload && payload.item;
+    if (!item) return null;
+
+    const artists =
+      (item.artists || []).map((one) => one && one.name).filter(Boolean).join(", ") ||
+      (item.show && item.show.name) ||
+      "";
+    const images =
+      (item.album && item.album.images) || item.images || [];
+    const art = images.length ? (images[1] || images[0]).url : "";
+
+    const duration = item.duration_ms || 0;
+    const played = Math.min(payload.progress_ms || 0, duration);
+    const now = Date.now();
+
+    return {
+      song: item.name || "",
+      artist: artists,
+      album: (item.album && item.album.name) || (item.show && item.show.name) || "",
+      album_art_url: art,
+      track_url: (item.external_urls && item.external_urls.spotify) || "",
+      timestamps: duration
+        ? { start: now - played, end: now - played + duration }
+        : null,
+    };
+  }
+
+  async function refreshSpotify() {
+    if (!spotifyReady) return;
+
+    try {
+      const token = await spotifyAccessToken();
+      const res = await fetch(SPOTIFY_NOW_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+
+      if (res.status === 401) {
+        spotifyToken = "";
+        spotifyTokenExpires = 0;
+        throw new Error("spotify 401");
+      }
+      // nothing playing: Spotify answers 204
+      if (res.status === 204) {
+        renderSpotify(null);
+        return;
+      }
+      if (!res.ok) throw new Error(`spotify ${res.status}`);
+
+      const payload = await res.json();
+      renderSpotify(payload && payload.is_playing ? spotifyShape(payload) : null);
+    } catch (err) {
+      // keep the last known track on screen and try again on the next poll
+    }
+  }
+
   /* ---------- spotify now playing ---------- */
 
   let spotifyStart = 0;
@@ -523,6 +637,15 @@
 
   window.setInterval(paintSpotifyProgress, 1000);
 
+  if (spotifyReady) {
+    refreshSpotify();
+    window.setInterval(refreshSpotify, 10000);
+    window.addEventListener("focus", refreshSpotify);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshSpotify();
+    });
+  }
+
   async function refreshPresence() {
     try {
       const res = await fetch(presenceUrl, { cache: "no-store" });
@@ -532,7 +655,8 @@
 
       applyStatus(payload.data.discord_status, payload.data.discord_user);
       applyAvatar(payload.data.discord_user);
-      renderSpotify(payload.data.spotify);
+      // with Spotify wired up the Web API owns the card, Lanyard is the fallback
+      if (!spotifyReady) renderSpotify(payload.data.spotify);
     } catch (err) {
       // keep the local pfp; just report offline once we have no answer at all
       if (!discordPill || discordPill.dataset.status === "loading") {
