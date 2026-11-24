@@ -1029,6 +1029,9 @@
     });
   }
 
+  // a phone has no Alt or Esc key, so point at the exit that does exist there
+  const isTouchOnly = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+
   function openAdmin() {
     if (!adminEl || !adminKeyInput) return;
     adminEl.hidden = false;
@@ -1038,11 +1041,11 @@
       Promise.all([loadSongs(), loadBackgrounds()]).then(fillAdminFields);
       adminHandleInput.focus();
       adminHandleInput.select();
-      setHint("enter to save · esc to close", false);
+      setHint(isTouchOnly ? "tap outside to close" : "enter to save · esc to close", false);
     } else {
       adminKeyInput.value = "";
       adminKeyInput.focus();
-      setHint("alt + y to close", false);
+      setHint(isTouchOnly ? "tap outside to close" : "alt + y to close", false);
     }
   }
 
@@ -1279,7 +1282,7 @@
           Promise.all([loadSongs(), loadBackgrounds()]).then(fillAdminFields);
           adminHandleInput.focus();
           adminHandleInput.select();
-          setHint("enter to save · esc to close", false);
+          setHint(isTouchOnly ? "tap outside to close" : "enter to save · esc to close", false);
         } catch (err) {
           setHint("couldn't reach the server", true);
         }
@@ -1307,7 +1310,7 @@
         const data = await saveProfile(payload);
         adoptServerProfile(data);
         if (window.ZenBackground) window.ZenBackground.refresh();
-        setHint("saved · esc to close", false);
+        setHint(isTouchOnly ? "saved · tap outside to close" : "saved · esc to close", false);
       } catch (err) {
         if (err.status === 401) setHint("wrong key", true);
         else setHint("couldn't save — try again", true);
@@ -1366,6 +1369,29 @@
     });
 
     viewsStat.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
+  // twenty quick taps on the pfp: the phone equivalent of the view-count hold
+  const avatarWrap = document.querySelector(".avatar-wrap");
+  const TAP_TARGET = 20;
+  const TAP_GAP = 1500;
+  let pfpTaps = 0;
+  let pfpLastTap = 0;
+
+  if (avatarWrap) {
+    avatarWrap.addEventListener("click", () => {
+      if (!adminEl || !adminEl.hidden) return;
+
+      const now = Date.now();
+      pfpTaps = now - pfpLastTap > TAP_GAP ? 1 : pfpTaps + 1;
+      pfpLastTap = now;
+
+      if (pfpTaps < TAP_TARGET) return;
+
+      pfpTaps = 0;
+      if (navigator.vibrate) navigator.vibrate(20);
+      openAdmin();
+    });
   }
 
   /* ---------- 3d tilt (each card tilts on its own) ---------- */

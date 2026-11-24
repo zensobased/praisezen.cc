@@ -419,6 +419,8 @@ body {
   position: relative;
   width: 172px;
   height: 172px;
+  /* a fast tap burst on the pfp must not trigger double-tap zoom */
+  touch-action: manipulation;
 }
 
 /* Discord avatar decoration. Discord's preset canvas is 1.2x the avatar
