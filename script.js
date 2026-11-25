@@ -583,8 +583,14 @@
       views.textContent = formatViews(VIEWS_OVERRIDE);
     } else {
       const optimistic = state.views + 1;
-      views.textContent = "0";
-      countUp(views, optimistic);
+
+      if (state.views > 0) {
+        // Returning visit: keep the shown count and roll it up by one.
+        setViewsText(formatViews(optimistic), true);
+      } else {
+        views.textContent = "0";
+        countUp(views, optimistic);
+      }
 
       bumpViews().then((actual) => {
         if (actual !== optimistic) {
