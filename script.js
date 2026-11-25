@@ -118,51 +118,201 @@
     views.replaceChildren(frag);
   }
 
-  // Local time next to the location. America/New_York covers Miami, DST included.
-  const LOCATION_TIME_ZONE = "America/New_York";
-  const locationTimeFormat = (() => {
+  // Local time next to the location. The zone is derived from the location text,
+  // so changing the location in the admin moves the clock with it.
+  const FALLBACK_TIME_ZONE = "America/New_York";
+
+  // Cities whose IANA zone is not named after them (Miami lives in New_York).
+  const CITY_TIME_ZONES = {
+    miami: "America/New_York",
+    "new york": "America/New_York",
+    washington: "America/New_York",
+    boston: "America/New_York",
+    atlanta: "America/New_York",
+    philadelphia: "America/New_York",
+    detroit: "America/Detroit",
+    chicago: "America/Chicago",
+    houston: "America/Chicago",
+    dallas: "America/Chicago",
+    austin: "America/Chicago",
+    "new orleans": "America/Chicago",
+    minneapolis: "America/Chicago",
+    denver: "America/Denver",
+    phoenix: "America/Phoenix",
+    "las vegas": "America/Los_Angeles",
+    "los angeles": "America/Los_Angeles",
+    "san francisco": "America/Los_Angeles",
+    "san diego": "America/Los_Angeles",
+    seattle: "America/Los_Angeles",
+    portland: "America/Los_Angeles",
+    vancouver: "America/Vancouver",
+    toronto: "America/Toronto",
+    montreal: "America/Toronto",
+    "mexico city": "America/Mexico_City",
+    "sao paulo": "America/Sao_Paulo",
+    "rio de janeiro": "America/Sao_Paulo",
+    "buenos aires": "America/Argentina/Buenos_Aires",
+    bogota: "America/Bogota",
+    lima: "America/Lima",
+    santiago: "America/Santiago",
+    london: "Europe/London",
+    manchester: "Europe/London",
+    dublin: "Europe/Dublin",
+    paris: "Europe/Paris",
+    berlin: "Europe/Berlin",
+    munich: "Europe/Berlin",
+    amsterdam: "Europe/Amsterdam",
+    brussels: "Europe/Brussels",
+    madrid: "Europe/Madrid",
+    barcelona: "Europe/Madrid",
+    lisbon: "Europe/Lisbon",
+    rome: "Europe/Rome",
+    milan: "Europe/Rome",
+    zurich: "Europe/Zurich",
+    vienna: "Europe/Vienna",
+    prague: "Europe/Prague",
+    warsaw: "Europe/Warsaw",
+    stockholm: "Europe/Stockholm",
+    oslo: "Europe/Oslo",
+    copenhagen: "Europe/Copenhagen",
+    helsinki: "Europe/Helsinki",
+    athens: "Europe/Athens",
+    istanbul: "Europe/Istanbul",
+    moscow: "Europe/Moscow",
+    kyiv: "Europe/Kyiv",
+    dubai: "Asia/Dubai",
+    riyadh: "Asia/Riyadh",
+    "tel aviv": "Asia/Jerusalem",
+    jerusalem: "Asia/Jerusalem",
+    mumbai: "Asia/Kolkata",
+    delhi: "Asia/Kolkata",
+    bangalore: "Asia/Kolkata",
+    bengaluru: "Asia/Kolkata",
+    karachi: "Asia/Karachi",
+    dhaka: "Asia/Dhaka",
+    bangkok: "Asia/Bangkok",
+    jakarta: "Asia/Jakarta",
+    singapore: "Asia/Singapore",
+    "hong kong": "Asia/Hong_Kong",
+    shanghai: "Asia/Shanghai",
+    beijing: "Asia/Shanghai",
+    seoul: "Asia/Seoul",
+    tokyo: "Asia/Tokyo",
+    osaka: "Asia/Tokyo",
+    taipei: "Asia/Taipei",
+    manila: "Asia/Manila",
+    sydney: "Australia/Sydney",
+    melbourne: "Australia/Melbourne",
+    brisbane: "Australia/Brisbane",
+    perth: "Australia/Perth",
+    auckland: "Pacific/Auckland",
+    honolulu: "Pacific/Honolulu",
+    anchorage: "America/Anchorage",
+    cairo: "Africa/Cairo",
+    lagos: "Africa/Lagos",
+    nairobi: "Africa/Nairobi",
+    johannesburg: "Africa/Johannesburg",
+    "cape town": "Africa/Johannesburg",
+    casablanca: "Africa/Casablanca",
+    marrakesh: "Africa/Casablanca",
+  };
+
+  // Any other city that has its own IANA zone name (Chicago, Tokyo, Toronto…)
+  // resolves from the zone list instead of a hand-written map.
+  const zoneCityIndex = (() => {
+    const index = new Map();
     try {
-      return new Intl.DateTimeFormat("en-US", {
-        timeZone: LOCATION_TIME_ZONE,
-        hour: "numeric",
-        minute: "2-digit",
+      const zones = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [];
+      zones.forEach((zone) => {
+        const city = zone.split("/").pop().replace(/_/g, " ").toLowerCase();
+        if (!index.has(city)) index.set(city, zone);
       });
     } catch (err) {
-      return null;
+      /* no zone list — the map above still covers the common cities */
     }
+    return index;
   })();
 
-  // Seconds appear only while the location is hovered.
-  const locationTimeFormatSeconds = (() => {
+  const normalizePlace = (text) =>
+    String(text || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  function resolveTimeZone(locationText) {
+    const text = normalizePlace(locationText);
+    if (!text) return FALLBACK_TIME_ZONE;
+
+    const padded = " " + text + " ";
+    const candidates = Object.entries(CITY_TIME_ZONES).map(([city, zone]) => [normalizePlace(city), zone]);
+    zoneCityIndex.forEach((zone, city) => candidates.push([city, zone]));
+
+    let bestCity = "";
+    let bestZone = "";
+
+    candidates.forEach(([city, zone]) => {
+      if (city.length < 3 || city.length <= bestCity.length) return;
+      if (!padded.includes(" " + city + " ")) return;
+      bestCity = city;
+      bestZone = zone;
+    });
+
+    return bestZone || FALLBACK_TIME_ZONE;
+  }
+
+  const clockFormats = new Map();
+
+  function clockFormat(zone, withSeconds) {
+    const key = zone + (withSeconds ? "|s" : "");
+    if (clockFormats.has(key)) return clockFormats.get(key);
+
+    let format = null;
     try {
-      return new Intl.DateTimeFormat("en-US", {
-        timeZone: LOCATION_TIME_ZONE,
+      format = new Intl.DateTimeFormat("en-US", {
+        timeZone: zone,
         hour: "numeric",
         minute: "2-digit",
-        second: "2-digit",
+        ...(withSeconds ? { second: "2-digit" } : {}),
       });
     } catch (err) {
-      return null;
+      format = null;
     }
-  })();
 
+    clockFormats.set(key, format);
+    return format;
+  }
+
+  let activeTimeZone = FALLBACK_TIME_ZONE;
   let clockShowsSeconds = false;
 
+  function setClockLocation(locationText) {
+    const zone = resolveTimeZone(locationText);
+    if (zone === activeTimeZone) return;
+    activeTimeZone = zone;
+    paintLocationClock();
+  }
+
   function paintLocationClock() {
-    const format = clockShowsSeconds && locationTimeFormatSeconds ? locationTimeFormatSeconds : locationTimeFormat;
-    if (!locationClockEl || !format) return;
+    if (!locationClockEl) return;
+    const format = clockFormat(activeTimeZone, clockShowsSeconds) || clockFormat(FALLBACK_TIME_ZONE, clockShowsSeconds);
+    if (!format) return;
     locationClockEl.textContent = "· " + format.format(new Date());
   }
 
   function startLocationClock() {
-    if (!locationClockEl || !locationTimeFormat) return;
+    if (!locationClockEl) return;
 
+    activeTimeZone = resolveTimeZone(state.location);
     paintLocationClock();
     setInterval(() => {
       if (!document.hidden) paintLocationClock();
     }, 1000);
     document.addEventListener("visibilitychange", paintLocationClock);
 
+    // Seconds appear only while the location is hovered.
     const setSeconds = (on) => {
       if (clockShowsSeconds === on) return;
       clockShowsSeconds = on;
@@ -341,6 +491,7 @@
     if (typeof data.location === "string" && data.location.trim()) {
       state.location = data.location.trim();
       if (locationEl) locationEl.textContent = state.location;
+      setClockLocation(state.location);
     }
 
     if (typeof data.lastfm === "string") {
