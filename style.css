@@ -673,6 +673,12 @@ body {
   opacity: 0.75;
 }
 
+.location-clock {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
 /* ---------- hidden admin ---------- */
 
 .admin {

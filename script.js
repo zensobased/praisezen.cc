@@ -38,6 +38,7 @@
   const handleEl = document.getElementById("handle");
   const bioEl = document.getElementById("bio");
   const locationEl = document.getElementById("location");
+  const locationClockEl = document.getElementById("locationClock");
   const descriptionMeta = document.querySelector('meta[name="description"]');
 
   const discordPill = document.getElementById("discord");
@@ -85,6 +86,34 @@
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatViews = (n) => new Intl.NumberFormat("en-US").format(n);
+
+  // Local time next to the location. America/New_York covers Miami, DST included.
+  const LOCATION_TIME_ZONE = "America/New_York";
+  const locationTimeFormat = (() => {
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: LOCATION_TIME_ZONE,
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch (err) {
+      return null;
+    }
+  })();
+
+  function paintLocationClock() {
+    if (!locationClockEl || !locationTimeFormat) return;
+    locationClockEl.textContent = "· " + locationTimeFormat.format(new Date());
+  }
+
+  function startLocationClock() {
+    if (!locationClockEl || !locationTimeFormat) return;
+    paintLocationClock();
+    setInterval(() => {
+      if (!document.hidden) paintLocationClock();
+    }, 1000);
+    document.addEventListener("visibilitychange", paintLocationClock);
+  }
 
   // Views come from the API. ?views=N overrides the count for that visit only.
   const viewsParam = new URLSearchParams(window.location.search).get("views");
@@ -337,6 +366,7 @@
 
   applyProfile(readCache());
   loadProfile();
+  startLocationClock();
 
   /* ---------- view counter ---------- */
 
