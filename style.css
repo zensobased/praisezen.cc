@@ -641,6 +641,18 @@ body {
   filter: drop-shadow(0 0 5px currentColor);
 }
 
+.meta .stat,
+.meta .stat * {
+  transition: color 0.22s ease, text-shadow 0.22s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .meta .stat:hover {
+    color: #f6f2f2;
+    text-shadow: 0 0 0.5em currentColor, 0 0 1.2em rgba(255, 255, 255, 0.28);
+  }
+}
+
 .stat {
   display: flex;
   align-items: center;
@@ -659,6 +671,22 @@ body {
   font-size: 14px;
   font-weight: 550;
   font-variant-numeric: tabular-nums;
+}
+
+.views-roll {
+  display: inline-block;
+  animation: views-roll 0.38s cubic-bezier(0.16, 0.84, 0.3, 1);
+}
+
+@keyframes views-roll {
+  from {
+    transform: translateY(0.55em);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .icon-eye {

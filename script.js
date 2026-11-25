@@ -87,6 +87,37 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatViews = (n) => new Intl.NumberFormat("en-US").format(n);
 
+  // Odometer roll: only the digits that changed slide into place.
+  const VIEW_ROLL_MS = 380;
+
+  function setViewsText(text, roll = false) {
+    if (!views) return;
+
+    const prev = views.textContent;
+    if (prev === text) return;
+
+    if (!roll || reducedMotion || prev.length !== text.length) {
+      views.textContent = text;
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+
+    text.split("").forEach((ch, i) => {
+      if (ch !== prev[i] && /\d/.test(ch)) {
+        const digit = document.createElement("span");
+        digit.className = "views-roll";
+        digit.textContent = ch;
+        frag.appendChild(digit);
+        window.setTimeout(() => digit.classList.remove("views-roll"), VIEW_ROLL_MS + 60);
+      } else {
+        frag.appendChild(document.createTextNode(ch));
+      }
+    });
+
+    views.replaceChildren(frag);
+  }
+
   // Local time next to the location. America/New_York covers Miami, DST included.
   const LOCATION_TIME_ZONE = "America/New_York";
   const locationTimeFormat = (() => {
@@ -101,18 +132,46 @@
     }
   })();
 
+  // Seconds appear only while the location is hovered.
+  const locationTimeFormatSeconds = (() => {
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: LOCATION_TIME_ZONE,
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } catch (err) {
+      return null;
+    }
+  })();
+
+  let clockShowsSeconds = false;
+
   function paintLocationClock() {
-    if (!locationClockEl || !locationTimeFormat) return;
-    locationClockEl.textContent = "· " + locationTimeFormat.format(new Date());
+    const format = clockShowsSeconds && locationTimeFormatSeconds ? locationTimeFormatSeconds : locationTimeFormat;
+    if (!locationClockEl || !format) return;
+    locationClockEl.textContent = "· " + format.format(new Date());
   }
 
   function startLocationClock() {
     if (!locationClockEl || !locationTimeFormat) return;
+
     paintLocationClock();
     setInterval(() => {
       if (!document.hidden) paintLocationClock();
     }, 1000);
     document.addEventListener("visibilitychange", paintLocationClock);
+
+    const setSeconds = (on) => {
+      if (clockShowsSeconds === on) return;
+      clockShowsSeconds = on;
+      paintLocationClock();
+    };
+
+    const host = locationClockEl.parentElement || locationClockEl;
+    host.addEventListener("pointerenter", () => setSeconds(true));
+    host.addEventListener("pointerleave", () => setSeconds(false));
   }
 
   // Views come from the API. ?views=N overrides the count for that visit only.
@@ -530,7 +589,7 @@
       bumpViews().then((actual) => {
         if (actual !== optimistic) {
           viewsLocked = true;
-          views.textContent = formatViews(actual);
+          setViewsText(formatViews(actual), true);
         }
       });
     }
@@ -1126,7 +1185,7 @@
   function adoptServerProfile(data) {
     applyProfile(data);
     viewsLocked = true;
-    views.textContent = formatViews(state.views);
+    setViewsText(formatViews(state.views), true);
     writeCache();
     fillAdminFields();
   }
