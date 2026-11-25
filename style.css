@@ -634,6 +634,11 @@ body {
   color: var(--fg);
   font-size: 13px;
   line-height: 1;
+  text-shadow: 0 0 0.46em currentColor;
+}
+
+.meta svg {
+  filter: drop-shadow(0 0 5px currentColor);
 }
 
 .stat {
@@ -674,8 +679,10 @@ body {
 }
 
 .location-clock {
+  font: inherit;
+  color: inherit;
+  opacity: 1;
   font-variant-numeric: tabular-nums;
-  opacity: 0.65;
   white-space: nowrap;
 }
 
