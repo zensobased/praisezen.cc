@@ -3,10 +3,6 @@
   const API_BASE = "https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page";
   const CACHE_KEY = "zen.data";
 
-  const SPOTIFY_CLIENT_ID = "5bf154790c7d4c93aef732d4a1af3925";
-  const SPOTIFY_REFRESH_TOKEN = "AQCcEvgTcNvodMzrfSVIzK3CorzCqKse3jHr7SlqQUJOYcjM9Da7_oNbdnaVv-lM_2c-hrjQoX36JvV2m9-juRqvH-HyjP57eAiiJOGLT6Ei91HKY6eh7VIqc1jGXlCFBVQ";
-  const spotifyReady = Boolean(SPOTIFY_CLIENT_ID && SPOTIFY_REFRESH_TOKEN);
-
   const DEFAULTS = {
     handle: "@rebornzen",
     bio: "yooo wsp",
@@ -801,51 +797,8 @@
     if (discordLabel) discordLabel.textContent = STATUS_LABEL[key];
   }
 
-  const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
-  const SPOTIFY_NOW_URL =
-    "https://api.spotify.com/v1/me/player/currently-playing?additional_types=track";
-
-  let spotifyToken = "";
-  let spotifyTokenExpires = 0;
-  let spotifyTokenRequest = null;
-
-  async function spotifyAccessToken() {
-    if (!spotifyReady) return "";
-    if (spotifyToken && Date.now() < spotifyTokenExpires) return spotifyToken;
-    if (spotifyTokenRequest) return spotifyTokenRequest;
-
-    spotifyTokenRequest = (async () => {
-      const body = new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: SPOTIFY_REFRESH_TOKEN,
-        client_id: SPOTIFY_CLIENT_ID,
-      });
-      const res = await fetch(SPOTIFY_TOKEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body,
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`spotify token ${res.status}`);
-      const data = await res.json();
-      if (!data.access_token) throw new Error("spotify token missing");
-
-      spotifyToken = data.access_token;
-      const life = Math.max(60, (data.expires_in || 3600) - 60);
-      spotifyTokenExpires = Date.now() + life * 1000;
-      return spotifyToken;
-    })();
-
-    try {
-      return await spotifyTokenRequest;
-    } catch (err) {
-      spotifyToken = "";
-      spotifyTokenExpires = 0;
-      throw err;
-    } finally {
-      spotifyTokenRequest = null;
-    }
-  }
+  const SPOTIFY_NOW_URL = "https://praisezen-spotify-proxy-zr6d3s-preview.freebuff.site/now";
+  let spotifyLive = false;
 
   function spotifyShape(payload) {
     const item = payload && payload.item;
@@ -876,27 +829,18 @@
   }
 
   async function refreshSpotify() {
-    if (!spotifyReady) return;
-
     try {
-      const token = await spotifyAccessToken();
-      const res = await fetch(SPOTIFY_NOW_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
+      const res = await fetch(SPOTIFY_NOW_URL, { cache: "no-store" });
 
-      if (res.status === 401) {
-        spotifyToken = "";
-        spotifyTokenExpires = 0;
-        throw new Error("spotify 401");
-      }
       if (res.status === 204) {
+        spotifyLive = true;
         renderSpotify(null);
         return;
       }
       if (!res.ok) throw new Error(`spotify ${res.status}`);
 
       const payload = await res.json();
+      spotifyLive = true;
       renderSpotify(payload && payload.is_playing ? spotifyShape(payload) : null);
     } catch {}
   }
@@ -972,14 +916,12 @@
 
   window.setInterval(paintSpotifyProgress, 1000);
 
-  if (spotifyReady) {
-    refreshSpotify();
-    window.setInterval(refreshSpotify, 10000);
-    window.addEventListener("focus", refreshSpotify);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") refreshSpotify();
-    });
-  }
+  refreshSpotify();
+  window.setInterval(refreshSpotify, 10000);
+  window.addEventListener("focus", refreshSpotify);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshSpotify();
+  });
 
   async function refreshPresence() {
     try {
@@ -990,7 +932,7 @@
 
       applyStatus(payload.data.discord_status, payload.data.discord_user);
       applyAvatar(payload.data.discord_user);
-      if (!spotifyReady) renderSpotify(payload.data.spotify);
+      if (!spotifyLive) renderSpotify(payload.data.spotify);
     } catch (err) {
       if (!discordPill || discordPill.dataset.status === "loading") {
         applyStatus("offline", null);

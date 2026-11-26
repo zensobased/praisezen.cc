@@ -259,9 +259,9 @@
       <textarea id="token" readonly rows="4" spellcheck="false"></textarea>
       <button class="go" id="copyToken" type="button">copy refresh token</button>
       <p class="hint">
-        Set <code>SPOTIFY_CLIENT_ID</code> and <code>SPOTIFY_REFRESH_TOKEN</code> near the top of
-        <code>script.js</code>. Treat the token like a password: anyone holding it can read your
-        playback state.
+        Set <code>SPOTIFY_CLIENT_ID</code> and <code>SPOTIFY_REFRESH_TOKEN</code> as secrets on the
+        spotify proxy worker, never in <code>script.js</code>. Treat the token like a password: anyone
+        holding it can read your playback state.
       </p>
       <p class="hint" id="live"></p>
     </section>
