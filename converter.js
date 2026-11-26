@@ -1,5 +1,4 @@
 (() => {
-  /* converts a local file or a direct media link to mp3, entirely in the browser */
 
   const CDN = "https://cdn.jsdelivr.net/npm";
   const FFMPEG_JS = "assets/ffmpeg/ffmpeg.js?v=1";
@@ -68,8 +67,6 @@
   requestAnimationFrame(() => {
     requestAnimationFrame(() => document.body.classList.add("is-ready"));
   });
-
-  /* ---------- helpers ---------- */
 
   function userError(message) {
     const err = new Error(message);
@@ -190,8 +187,6 @@
     return URL.createObjectURL(blob);
   }
 
-  /* ---------- ui ---------- */
-
   function setProgress(ratio) {
     if (!Number.isFinite(ratio)) {
       els.bar.classList.add("is-indeterminate");
@@ -238,9 +233,7 @@
     els.result.hidden = true;
     try {
       els.audio.pause();
-    } catch (err) {
-      /* not playing */
-    }
+    } catch {}
     els.audio.removeAttribute("src");
     els.download.removeAttribute("href");
     if (outUrl) {
@@ -302,8 +295,6 @@
     clearError();
   }
 
-  /* ---------- engine ---------- */
-
   async function ensureEngine(token) {
     if (engine) return engine;
 
@@ -355,8 +346,6 @@
 
     return enginePromise;
   }
-
-  /* ---------- fetching a link ---------- */
 
   async function fetchMedia(raw, token) {
     let url;
@@ -453,8 +442,6 @@
     });
   }
 
-  /* ---------- converting ---------- */
-
   async function convert(bitrate) {
     const token = { cancelled: false, controller: null };
     job = token;
@@ -508,18 +495,14 @@
       } finally {
         try {
           await instance.deleteFile(input);
-        } catch (err) {
-          /* already gone */
-        }
+        } catch {}
       }
 
       if (token.cancelled) return;
       if (code !== 0) {
         try {
           await instance.deleteFile(OUTPUT);
-        } catch (err) {
-          /* nothing written */
-        }
+        } catch {}
         throw userError(
           "that file couldn't be converted — it may have no audio track, or use a format the converter doesn't handle."
         );
@@ -528,9 +511,7 @@
       const data = await instance.readFile(OUTPUT);
       try {
         await instance.deleteFile(OUTPUT);
-      } catch (err) {
-        /* already gone */
-      }
+      } catch {}
 
       if (token.cancelled) return;
       if (typeof data === "string" || !data || data.byteLength < 128) {
@@ -556,8 +537,6 @@
       }
     }
   }
-
-  /* ---------- events ---------- */
 
   els.form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -631,17 +610,13 @@
     if (token.controller) {
       try {
         token.controller.abort();
-      } catch (err) {
-        /* already finished */
-      }
+      } catch {}
     }
 
     if (engine) {
       try {
         engine.terminate();
-      } catch (err) {
-        /* already gone */
-      }
+      } catch {}
       engine = null;
       enginePromise = null;
     }

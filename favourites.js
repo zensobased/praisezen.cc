@@ -37,13 +37,9 @@
     verifying: false,
   };
 
-  /* ---------- entrance ---------- */
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => document.body.classList.add("is-ready"));
   });
-
-  /* ---------- messages ---------- */
 
   function setStatus(text, isError) {
     if (!statusEl) return;
@@ -61,8 +57,6 @@
   function defaultHint() {
     return state.kind === "track" ? "type a track or artist" : "type an album or artist";
   }
-
-  /* ---------- shelf ---------- */
 
   function buildCard(item, index) {
     const row = document.createElement("li");
@@ -186,8 +180,6 @@
     }
   }
 
-  /* ---------- remove ---------- */
-
   function disarmRemoves() {
     grid.querySelectorAll(".fav-remove.is-armed").forEach((button) => {
       button.classList.remove("is-armed");
@@ -210,7 +202,6 @@
     button.title = "click again to remove";
   }
 
-  // clicking anywhere else cancels the pending remove, no timer needed
   document.addEventListener(
     "pointerdown",
     (e) => {
@@ -238,8 +229,6 @@
       setStatus("couldn't remove that one — try again.", true);
     }
   }
-
-  /* ---------- dev panel ---------- */
 
   function paintDevPanel() {
     if (state.editing) {
@@ -342,7 +331,6 @@
     });
   }
 
-  // long-press the heading on touch screens, same idea as the profile admin
   if (titleEl) {
     let pressTimer = 0;
     let origin = null;
@@ -373,8 +361,6 @@
 
     titleEl.addEventListener("contextmenu", (e) => e.preventDefault());
   }
-
-  /* ---------- add modal ---------- */
 
   function syncKinds() {
     kindButtons.forEach((button) => {
@@ -625,8 +611,6 @@
     }
   }
 
-  /* ---------- keys ---------- */
-
   window.addEventListener("keydown", (e) => {
     if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "y" || e.key === "Y" || e.code === "KeyY")) {
       e.preventDefault();
@@ -640,8 +624,6 @@
       else if (devPanel && !devPanel.hidden) closeDev();
     }
   });
-
-  /* ---------- boot ---------- */
 
   loadFavourites();
 })();

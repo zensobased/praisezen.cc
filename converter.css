@@ -1,5 +1,3 @@
-/* ---------- mp3 converter page ---------- */
-
 body.convert-page {
   height: auto;
   min-height: 100dvh;
@@ -13,8 +11,6 @@ body.convert-page {
 [hidden] {
   display: none !important;
 }
-
-/* ---------- heading ---------- */
 
 .convert-head {
   display: flex;
@@ -58,8 +54,6 @@ body.convert-page {
   color: rgba(194, 184, 184, 0.52);
 }
 
-/* ---------- card ---------- */
-
 .convert-card {
   position: relative;
   padding: 16px;
@@ -85,8 +79,6 @@ body.convert-page {
   opacity: 0.45;
   pointer-events: none;
 }
-
-/* ---------- drop zone ---------- */
 
 .convert-drop-wrap {
   position: relative;
@@ -197,8 +189,6 @@ body.convert-page {
   outline-offset: 2px;
 }
 
-/* ---------- divider + link ---------- */
-
 .convert-or {
   display: flex;
   align-items: center;
@@ -259,8 +249,6 @@ body.convert-page {
 .convert-url input::placeholder {
   color: rgba(194, 184, 184, 0.3);
 }
-
-/* ---------- controls ---------- */
 
 .convert-controls {
   display: flex;
@@ -341,8 +329,6 @@ body.convert-page {
   outline: 2px solid rgba(194, 184, 184, 0.5);
   outline-offset: 2px;
 }
-
-/* ---------- error / progress ---------- */
 
 .convert-error {
   margin-top: 12px;
@@ -428,8 +414,6 @@ body.convert-page {
   outline-offset: 3px;
 }
 
-/* ---------- log ---------- */
-
 .convert-log {
   margin-top: 12px;
   font-size: 10.5px;
@@ -459,8 +443,6 @@ body.convert-page {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-
-/* ---------- result ---------- */
 
 .convert-result {
   display: flex;
@@ -594,8 +576,6 @@ body.convert-page {
   outline-offset: 2px;
 }
 
-/* ---------- footnote ---------- */
-
 .convert-foot {
   max-width: 52ch;
   padding: 0 2px;
@@ -603,8 +583,6 @@ body.convert-page {
   line-height: 1.55;
   color: rgba(194, 184, 184, 0.32);
 }
-
-/* ---------- responsive ---------- */
 
 @media (max-width: 480px) {
   .convert-head {

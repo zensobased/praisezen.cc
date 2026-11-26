@@ -28,13 +28,9 @@
 
   const formatNumber = (n) => new Intl.NumberFormat("en-US").format(n);
 
-  /* ---------- entrance ---------- */
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => document.body.classList.add("is-ready"));
   });
-
-  /* ---------- helpers ---------- */
 
   function timeAgo(ms) {
     const seconds = Math.max(0, Math.round((Date.now() - ms) / 1000));
@@ -54,7 +50,6 @@
   function setArt(img, url) {
     if (!img) return;
 
-    // same cover on the next poll: leave it alone instead of flashing
     if (url && img.getAttribute("src") === url) return;
 
     img.classList.remove("is-loaded");
@@ -79,8 +74,6 @@
       ? `${API_BASE}/api/lastfm?view=recent`
       : `${API_BASE}/api/lastfm?period=${encodeURIComponent(view)}`;
   }
-
-  /* ---------- now playing ---------- */
 
   function renderNow(track, user) {
     if (!nowEl) return;
@@ -124,8 +117,6 @@
 
     setArt(nowArt, track.art || "");
   }
-
-  /* ---------- rows ---------- */
 
   function buildArt(url) {
     const art = document.createElement("span");
@@ -226,8 +217,6 @@
     });
   }
 
-  /* ---------- lists ---------- */
-
   function rowSignature(track, view) {
     return view === "recent"
       ? [track.title, track.artist, track.playing, track.playedAt]
@@ -268,8 +257,6 @@
       tracksEl.appendChild(item);
     }
   }
-
-  /* ---------- data ---------- */
 
   function applyUser(user) {
     if (!user || user === state.user) return;
@@ -382,8 +369,6 @@
     }
   }
 
-  /* ---------- tabs ---------- */
-
   function syncTabs(view) {
     if (!periodsEl) return;
 
@@ -412,8 +397,6 @@
       load(view, true);
     });
   }
-
-  /* ---------- refresh loop ---------- */
 
   load(state.view, false);
 

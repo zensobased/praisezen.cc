@@ -1,5 +1,4 @@
 (() => {
-  /* one global backdrop, shared by the profile, music and favourites pages */
 
   const API_BASE = "https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page";
   const CACHE_KEY = "zen.background";
@@ -27,9 +26,7 @@
     try {
       if (!entry) window.localStorage.removeItem(CACHE_KEY);
       else window.localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
-    } catch (err) {
-      /* private mode — the API still drives the current page */
-    }
+    } catch {}
   }
 
   function removeMedia() {
@@ -133,9 +130,7 @@
 
       if (entry) render(entry);
       else clear();
-    } catch (err) {
-      /* keep the cached backdrop if the API is unreachable */
-    }
+    } catch {}
   }
 
   window.ZenBackground = { refresh, render, clear };

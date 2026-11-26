@@ -1,5 +1,3 @@
-/* ---------- music page ---------- */
-
 body.music-page {
   height: auto;
   min-height: 100dvh;
@@ -19,8 +17,6 @@ body.music-page {
     calc(34px + env(safe-area-inset-bottom))
     calc(22px + env(safe-area-inset-left));
 }
-
-/* ---------- nav ---------- */
 
 .music-nav {
   display: flex;
@@ -72,8 +68,6 @@ body.music-page {
   color: rgba(194, 184, 184, 0.35);
   white-space: nowrap;
 }
-
-/* ---------- now playing ---------- */
 
 .now {
   position: relative;
@@ -275,8 +269,6 @@ body.music-page {
   opacity: 0.82;
 }
 
-/* ---------- top tracks ---------- */
-
 .top {
   display: flex;
   flex-direction: column;
@@ -477,8 +469,6 @@ body.music-page {
   display: none;
 }
 
-/* ---------- skeleton ---------- */
-
 .track-skeleton {
   display: grid;
   grid-template-columns: 24px 44px minmax(0, 1fr);
@@ -523,8 +513,6 @@ body.music-page {
   height: 8px;
 }
 
-/* ---------- footer ---------- */
-
 .music-foot {
   display: flex;
   align-items: center;
@@ -544,8 +532,6 @@ body.music-page {
   color: var(--fg);
   border-color: rgba(194, 184, 184, 0.5);
 }
-
-/* ---------- motion ---------- */
 
 @keyframes shimmer {
   from {
@@ -576,8 +562,6 @@ body.music-page {
     transform: none;
   }
 }
-
-/* ---------- small screens ---------- */
 
 @media (max-width: 560px) {
   .music {

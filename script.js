@@ -1,11 +1,8 @@
 (() => {
-  /* ---------- config ---------- */
 
   const API_BASE = "https://site-da7f266cd38645a88d82577d4531a2db.freebuff.page";
   const CACHE_KEY = "zen.data";
 
-  // Spotify Web API. Fill both values after running the one-time connect step at
-  // /spotify.html; while they are empty the card falls back to Lanyard.
   const SPOTIFY_CLIENT_ID = "5bf154790c7d4c93aef732d4a1af3925";
   const SPOTIFY_REFRESH_TOKEN = "AQCcEvgTcNvodMzrfSVIzK3CorzCqKse3jHr7SlqQUJOYcjM9Da7_oNbdnaVv-lM_2c-hrjQoX36JvV2m9-juRqvH-HyjP57eAiiJOGLT6Ei91HKY6eh7VIqc1jGXlCFBVQ";
   const spotifyReady = Boolean(SPOTIFY_CLIENT_ID && SPOTIFY_REFRESH_TOKEN);
@@ -24,8 +21,6 @@
     backgroundName: "",
     backgroundKind: "",
   };
-
-  /* ---------- elements ---------- */
 
   const loader = document.getElementById("loader");
   const audioBtn = document.getElementById("audioBtn");
@@ -87,7 +82,6 @@
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const formatViews = (n) => new Intl.NumberFormat("en-US").format(n);
 
-  // Odometer roll: only the digits that changed slide into place.
   const VIEW_ROLL_MS = 380;
 
   function setViewsText(text, roll = false) {
@@ -118,11 +112,8 @@
     views.replaceChildren(frag);
   }
 
-  // Local time next to the location. The zone is derived from the location text,
-  // so changing the location in the admin moves the clock with it.
   const FALLBACK_TIME_ZONE = "America/New_York";
 
-  // Cities whose IANA zone is not named after them (Miami lives in New_York).
   const CITY_TIME_ZONES = {
     miami: "America/New_York",
     "new york": "America/New_York",
@@ -217,8 +208,6 @@
     marrakesh: "Africa/Casablanca",
   };
 
-  // Any other city that has its own IANA zone name (Chicago, Tokyo, Toronto…)
-  // resolves from the zone list instead of a hand-written map.
   const zoneCityIndex = (() => {
     const index = new Map();
     try {
@@ -227,9 +216,7 @@
         const city = zone.split("/").pop().replace(/_/g, " ").toLowerCase();
         if (!index.has(city)) index.set(city, zone);
       });
-    } catch (err) {
-      /* no zone list — the map above still covers the common cities */
-    }
+    } catch {}
     return index;
   })();
 
@@ -312,7 +299,6 @@
     }, 1000);
     document.addEventListener("visibilitychange", paintLocationClock);
 
-    // Seconds appear only while the location is hovered.
     const setSeconds = (on) => {
       if (clockShowsSeconds === on) return;
       clockShowsSeconds = on;
@@ -324,7 +310,6 @@
     host.addEventListener("pointerleave", () => setSeconds(false));
   }
 
-  // Views come from the API. ?views=N overrides the count for that visit only.
   const viewsParam = new URLSearchParams(window.location.search).get("views");
   const VIEWS_OVERRIDE =
     viewsParam !== null && String(viewsParam).trim() !== "" && Number.isFinite(Number(viewsParam))
@@ -342,12 +327,6 @@
   let backgrounds = [];
   let backgroundsLoading = false;
 
-  /* ---------- card visibility (admin only) ---------- */
-
-  // the profile API keeps a fixed set of fields and drops anything unknown, so
-  // the three switches travel in the bio as an invisible suffix: U+2063 followed
-  // by one zero-width character per card. With everything showing the bio is
-  // left exactly as typed.
   const CARD_KEYS = ["profile", "server", "spotify"];
   const CARD_MARK = "\u2063";
   const CARD_OFF = "\u200b";
@@ -376,7 +355,6 @@
       if (el) {
         el.classList.toggle("is-hidden", !shown);
         if (!shown) {
-          // drop any leftover tilt so the card comes back level
           el.style.removeProperty("transform");
           el.classList.remove("is-tilting");
         }
@@ -453,8 +431,6 @@
     });
   });
 
-  /* ---------- profile cache ---------- */
-
   function readCache() {
     try {
       const data = JSON.parse(window.localStorage.getItem(CACHE_KEY) || "null");
@@ -467,9 +443,7 @@
   function writeCache() {
     try {
       window.localStorage.setItem(CACHE_KEY, JSON.stringify(state));
-    } catch (err) {
-      /* private mode: the API stays authoritative anyway */
-    }
+    } catch {}
   }
 
   function applyProfile(data) {
@@ -547,9 +521,7 @@
       const data = await res.json();
       applyProfile(data);
       writeCache();
-    } catch (err) {
-      /* keep whatever the cache or markup already shows */
-    }
+    } catch {}
   }
 
   async function bumpViews() {
@@ -578,8 +550,6 @@
   loadProfile();
   startLocationClock();
 
-  /* ---------- view counter ---------- */
-
   function countUp(el, target, duration = 1400) {
     const start = performance.now();
     const from = 0;
@@ -599,15 +569,12 @@
     requestAnimationFrame(frame);
   }
 
-  /* ---------- typewriter name ---------- */
-
   function startTyping() {
     if (!nameEl || reducedMotion) return;
 
     const full = nameEl.textContent.trim();
     if (!full) return;
 
-    // reserve the finished width (plus the caret) so the badges don't jitter
     const width = nameEl.getBoundingClientRect().width;
     nameEl.textContent = "";
     if (width) nameEl.style.minWidth = Math.ceil(width + 9) + "px";
@@ -619,7 +586,6 @@
       if (i >= full.length) {
         window.setTimeout(() => {
           nameEl.classList.remove("is-typing");
-          // drop the reserved width so the name sits centred again
           nameEl.style.minWidth = "";
         }, 1500);
         return;
@@ -631,8 +597,6 @@
 
     window.setTimeout(typeNext, 300);
   }
-
-  /* ---------- audio ---------- */
 
   function applySong(url) {
     if (!url || !song) return;
@@ -672,9 +636,7 @@
     if (song.paused) {
       try {
         await song.play();
-      } catch (err) {
-        /* playback blocked or unsupported */
-      }
+      } catch {}
     } else {
       song.pause();
     }
@@ -684,8 +646,6 @@
   song.addEventListener("play", syncAudio);
   song.addEventListener("pause", syncAudio);
   song.addEventListener("ended", syncAudio);
-
-  /* ---------- volume (pointer devices) ---------- */
 
   const volumeInput = document.getElementById("volume");
   const VOLUME_KEY = "zen.volume";
@@ -699,9 +659,7 @@
     if (remember) {
       try {
         window.localStorage.setItem(VOLUME_KEY, String(song.volume));
-      } catch (err) {
-        /* private mode: the level just resets next visit */
-      }
+      } catch {}
     }
   }
 
@@ -709,16 +667,12 @@
   try {
     const stored = window.localStorage.getItem(VOLUME_KEY);
     if (stored !== null) savedVolume = Number(stored);
-  } catch (err) {
-    /* no saved level */
-  }
+  } catch {}
   applyVolume(savedVolume, false);
 
   if (volumeInput) {
     volumeInput.addEventListener("input", () => applyVolume(volumeInput.value, true));
   }
-
-  /* ---------- click to enter ---------- */
 
   function enter() {
     if (entered) return;
@@ -736,7 +690,6 @@
       const optimistic = state.views + 1;
 
       if (state.views > 0) {
-        // Returning visit: keep the shown count and roll it up by one.
         setViewsText(formatViews(optimistic), true);
       } else {
         views.textContent = "0";
@@ -753,7 +706,6 @@
 
     startTyping();
 
-    // this click is the user gesture, so the song is allowed to start
     const started = song.play();
     if (started && typeof started.then === "function") {
       started.then(syncAudio).catch(syncAudio);
@@ -770,8 +722,6 @@
     }
   });
 
-  /* ---------- discord status + avatar ---------- */
-
   const DISCORD_ID = "945118422331686962";
   const presenceUrl = `https://api.lanyard.rest/v1/users/${DISCORD_ID}`;
 
@@ -781,7 +731,6 @@
     if (!user) return "";
 
     if (!user.avatar) {
-      // default Discord avatar: discriminator % 5 for legacy accounts, id-based otherwise
       const index =
         user.discriminator && user.discriminator !== "0"
           ? Number(user.discriminator) % 5
@@ -818,7 +767,6 @@
     }
     if (url === liveDecoration) return;
 
-    // same trick as the avatar: only show it once the preset really loads
     const probe = new Image();
     probe.onload = () => {
       liveDecoration = url;
@@ -834,7 +782,6 @@
     const url = discordAvatar(user, 512);
     if (!url || url === liveAvatar || !avatarImg) return;
 
-    // only swap once the Discord image has actually downloaded
     const probe = new Image();
     probe.onload = () => {
       liveAvatar = url;
@@ -854,8 +801,6 @@
     if (discordLabel) discordLabel.textContent = STATUS_LABEL[key];
   }
 
-  /* ---------- spotify web api ---------- */
-
   const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token";
   const SPOTIFY_NOW_URL =
     "https://api.spotify.com/v1/me/player/currently-playing?additional_types=track";
@@ -864,8 +809,6 @@
   let spotifyTokenExpires = 0;
   let spotifyTokenRequest = null;
 
-  // the refresh token is swapped for a short-lived access token in the browser,
-  // so no server and no client secret are involved
   async function spotifyAccessToken() {
     if (!spotifyReady) return "";
     if (spotifyToken && Date.now() < spotifyTokenExpires) return spotifyToken;
@@ -888,7 +831,6 @@
       if (!data.access_token) throw new Error("spotify token missing");
 
       spotifyToken = data.access_token;
-      // renew a minute early so a request never lands on an expired token
       const life = Math.max(60, (data.expires_in || 3600) - 60);
       spotifyTokenExpires = Date.now() + life * 1000;
       return spotifyToken;
@@ -948,7 +890,6 @@
         spotifyTokenExpires = 0;
         throw new Error("spotify 401");
       }
-      // nothing playing: Spotify answers 204
       if (res.status === 204) {
         renderSpotify(null);
         return;
@@ -957,12 +898,8 @@
 
       const payload = await res.json();
       renderSpotify(payload && payload.is_playing ? spotifyShape(payload) : null);
-    } catch (err) {
-      // keep the last known track on screen and try again on the next poll
-    }
+    } catch {}
   }
-
-  /* ---------- spotify now playing ---------- */
 
   let spotifyStart = 0;
   let spotifyEnd = 0;
@@ -1053,10 +990,8 @@
 
       applyStatus(payload.data.discord_status, payload.data.discord_user);
       applyAvatar(payload.data.discord_user);
-      // with Spotify wired up the Web API owns the card, Lanyard is the fallback
       if (!spotifyReady) renderSpotify(payload.data.spotify);
     } catch (err) {
-      // keep the local pfp; just report offline once we have no answer at all
       if (!discordPill || discordPill.dataset.status === "loading") {
         applyStatus("offline", null);
       }
@@ -1064,14 +999,11 @@
   }
 
   refreshPresence();
-  // keep the avatar, decoration and status in step with Discord
   window.setInterval(refreshPresence, 10000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshPresence();
   });
   window.addEventListener("focus", refreshPresence);
-
-  /* ---------- discord server widget ---------- */
 
   const SERVER_INVITE = "sarcastic";
   const INVITE_API = `https://discord.com/api/v10/invites/${SERVER_INVITE}?with_counts=true`;
@@ -1091,7 +1023,6 @@
       const guild = data.guild;
       if (!guild) return;
 
-      // the join link follows the invite code, so a rename needs no edit
       if (serverCard) serverCard.href = `https://discord.gg/${data.code || SERVER_INVITE}`;
       if (guild.name && serverName) serverName.textContent = guild.name;
       if (guild.id && guild.icon && serverIcon) {
@@ -1103,9 +1034,7 @@
       if (typeof data.approximate_member_count === "number") {
         serverMembers.textContent = data.approximate_member_count.toLocaleString("en-US");
       }
-    } catch (err) {
-      // offline / rate limited: keep the numbers already on the card
-    }
+    } catch {}
   }
 
   refreshServer();
@@ -1114,8 +1043,6 @@
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") refreshServer();
   });
-
-  /* ---------- hidden admin (alt + y, or hold the view count) ---------- */
 
   function setHint(text, isError) {
     if (!adminHint) return;
@@ -1275,7 +1202,6 @@
     });
   }
 
-  // a phone has no Alt or Esc key, so point at the exit that does exist there
   const isTouchOnly = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
   function openAdmin() {
@@ -1581,7 +1507,6 @@
     if (e.key === "Escape" && adminEl && !adminEl.hidden) closeAdmin();
   });
 
-  // no Alt key on a phone: hold the view count for a moment instead
   const viewsStat = document.querySelector(".views");
   let pressTimer = 0;
   let pressOrigin = null;
@@ -1617,7 +1542,6 @@
     viewsStat.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
-  // twenty quick taps on the pfp: the phone equivalent of the view-count hold
   const avatarWrap = document.querySelector(".avatar-wrap");
   const TAP_TARGET = 20;
   const TAP_GAP = 1500;
@@ -1640,10 +1564,6 @@
     });
   }
 
-  /* ---------- 3d tilt (each card tilts on its own) ---------- */
-
-  // the profile card gets a little more travel than the two flat cards, and the
-  // transform is written inline so the reveal animation's transform can't win
   const tiltCards = [
     { el: card, max: 9, depth: 1100 },
     { el: cardPanels.server, max: 6, depth: 800 },
